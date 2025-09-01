@@ -1,0 +1,3987 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Impossible Arbitrage System - MVP</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a1a1a;
+            color: #ffffff;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        /* 扩展状态栏为Dashboard指标 */
+        .status-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            background: #2a2a2a;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .status-item {
+            text-align: center;
+            padding: 10px;
+            border-radius: 6px;
+            background: #333;
+        }
+
+        .status-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #4ade80;
+        }
+
+        .status-label {
+            font-size: 0.9em;
+            color: #888;
+            margin-top: 4px;
+        }
+
+        .controls-panel {
+            background: #2a2a2a;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border: 1px solid #3a3a3a;
+        }
+
+        .controls-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+            align-items: flex-end;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            min-width: 120px;
+            flex: 1;
+        }
+
+        .control-group label {
+            margin-bottom: 5px;
+            color: #ccc;
+            font-weight: 500;
+            font-size: 12px;
+        }
+
+        .control-group input, .control-group select {
+            padding: 8px 12px;
+            border: 1px solid #444;
+            border-radius: 5px;
+            background: #333;
+            color: #fff;
+            font-size: 13px;
+            transition: all 0.2s ease;
+        }
+
+        .control-group input:focus, .control-group select:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+
+        .control-group input:hover, .control-group select:hover {
+            border-color: #555;
+        }
+
+        .control-group select {
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='%23999' d='M4.5 6L8 9.5 11.5 6h-7z'/%3E%3C/svg%3E");
+            background-position: right 8px center;
+            background-repeat: no-repeat;
+            background-size: 12px;
+            padding-right: 30px;
+        }
+
+        .filter-section-title {
+            color: #888;
+            font-size: 12px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            margin-top: 8px;
+        }
+
+        .filter-section-title:first-child {
+            margin-top: 0;
+        }
+
+        /* Trade Type Badges */
+        .trade-type-badge {
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .badge-long {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+            border: 1px solid #10b981;
+        }
+
+        .badge-short {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border: 1px solid #ef4444;
+        }
+
+        .trade-long {
+            border-left: 3px solid #10b981;
+        }
+
+        .trade-short {
+            border-left: 3px solid #ef4444;
+        }
+
+        /* Order Status Styles */
+        .order-status {
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        .status-filled {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+
+        .status-partial {
+            background: rgba(245, 158, 11, 0.2);
+            color: #f59e0b;
+        }
+
+        .status-pending {
+            background: rgba(107, 114, 128, 0.2);
+            color: #9ca3af;
+        }
+
+        .status-cancelled {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        /* Close Management Module Styles */
+        .close-management-section {
+            border: 2px solid #374151;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+            background: rgba(31, 41, 55, 0.5);
+        }
+
+        .close-management-section h6 {
+            margin: 0 0 15px 0;
+            padding-bottom: 8px;
+            border-bottom: 2px solid currentColor;
+        }
+
+        .control-group small {
+            display: block;
+            margin-top: 4px;
+            font-style: italic;
+        }
+
+        /* Rules List Styles */
+        .rule-item {
+            border: 1px solid #374151;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            padding: 12px;
+            background: rgba(55, 65, 81, 0.3);
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .rule-item:hover {
+            background: rgba(55, 65, 81, 0.5);
+            border-color: #60a5fa;
+        }
+
+        .rule-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .rule-name {
+            font-weight: bold;
+            color: #60a5fa;
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+
+        .rule-meta {
+            font-size: 11px;
+            color: #9ca3af;
+        }
+
+        .rule-summary {
+            font-size: 11px;
+            color: #d1d5db;
+            line-height: 1.4;
+        }
+
+        .rule-actions {
+            display: flex;
+            gap: 6px;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .controls-row {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .control-group {
+                min-width: 100%;
+            }
+            
+            .controls-panel {
+                padding: 12px;
+        }
+
+        .btn {
+                width: 100%;
+                margin-bottom: 8px;
+            }
+            
+            /* 规则配置页面响应式 */
+            .trade-form-section div[style*="display: flex"] {
+                flex-direction: column !important;
+                gap: 10px !important;
+            }
+            
+            .trade-form-section .control-group[style*="min-width: 200px"] {
+                min-width: 100% !important;
+            }
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 13px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+
+        .btn-warning {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background: #d97706;
+        }
+
+        .main-content {
+            background: #2a2a2a;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .section-header {
+            background: #333;
+            padding: 15px 20px;
+            border-bottom: 1px solid #444;
+        }
+
+        .section-header h2 {
+            font-size: 1.5em;
+            color: #fff;
+        }
+
+        /* Tab Navigation */
+        .tab-navigation {
+            display: flex;
+            background: #333;
+            border-radius: 8px 8px 0 0;
+            margin-bottom: 0;
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 15px 20px;
+            background: transparent;
+            color: #ccc;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .tab-button.active {
+            background: #2a2a2a;
+            color: #fff;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .tab-button:hover:not(.active) {
+            background: #444;
+            color: #fff;
+        }
+
+        .tab-content {
+            display: none;
+            background: #2a2a2a;
+            border-radius: 0 0 10px 10px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Table Styles */
+        .opportunities-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .opportunities-table th,
+        .opportunities-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #333;
+        }
+
+        .opportunities-table th {
+            background: #333;
+            color: #ccc;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+        }
+
+        .opportunities-table tr:hover {
+            background: #333;
+        }
+
+        .profit-positive {
+            color: #10b981;
+            font-weight: bold;
+        }
+
+        .profit-negative {
+            color: #ef4444;
+            font-weight: bold;
+        }
+
+        .exchange-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        .exchange-binance { background: #f59e0b; color: #000; }
+        .exchange-okx { background: #3b82f6; color: #fff; }
+        .exchange-bybit { background: #8b5cf6; color: #fff; }
+
+        .confidence-bar {
+            width: 100px;
+            height: 8px;
+            background: #333;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ef4444, #f59e0b, #10b981);
+            transition: width 0.3s ease;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #888;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #333;
+            border-radius: 50%;
+            border-top-color: #3b82f6;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Modal Styles */
+        .trade-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+        }
+
+        .modal-content {
+            background: #2a2a2a;
+            margin: 5% auto;
+            padding: 20px;
+            border-radius: 10px;
+            width: 600px;
+            max-width: 95%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .close {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: #fff;
+        }
+
+        .price-mode-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .price-mode-btn {
+            flex: 1;
+            padding: 8px 12px;
+            background: #444;
+            color: #ccc;
+            border: 1px solid #555;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .price-mode-btn.active {
+            background: #667eea;
+            color: #fff;
+            border-color: #667eea;
+        }
+        .price-mode-btn:hover:not(.active) {
+            background: #555;
+            color: #fff;
+        }
+        .market-warning {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid #ef4444;
+            border-radius: 6px;
+            padding: 10px;
+            margin-top: 10px;
+            font-size: 12px;
+            color: #ef4444;
+        }
+
+        /* Trade Form Styles */
+        .trade-form-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #333;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .trade-form-section h5 {
+            margin: 0 0 10px 0;
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        /* Slider styling for close percentage */
+        .close-mode-display {
+            margin-top: 10px;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #444;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #f59e0b;
+            cursor: pointer;
+            border: 2px solid #333;
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #f59e0b;
+            cursor: pointer;
+            border: 2px solid #333;
+        }
+
+        /* Order Status Styles */
+        .order-status {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .status-pending {
+            background: #f59e0b;
+            color: #000;
+        }
+
+        .status-filled {
+            background: #10b981;
+            color: #fff;
+        }
+
+        .status-cancelled {
+            background: #ef4444;
+            color: #fff;
+        }
+
+        .status-partial {
+            background: #3b82f6;
+            color: #fff;
+        }
+
+        /* Rules Configuration Styles */
+        .rules-config-container {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .rules-config-section {
+            flex: 1;
+            background: #333;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .opportunities-table {
+                font-size: 12px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .controls-row {
+                flex-direction: column;
+            }
+            
+            .opportunities-table {
+                font-size: 11px;
+            }
+            
+            .opportunities-table th,
+            .opportunities-table td {
+                padding: 8px 6px;
+            }
+
+            .rules-config-container {
+                flex-direction: column;
+            }
+        }
+
+        /* Animation */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .opportunity-row {
+            animation: fadeIn 0.5s ease both;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>Impossible Arbitrage System</h1>
+            <p>Advanced multi-market arbitrage opportunities detection and execution platform</p>
+        </div>
+
+        <!-- Dashboard Status Bar -->
+        <div class="status-bar">
+            <div class="status-item">
+                <div class="status-value" id="activeStrategies">0</div>
+                <div class="status-label">活跃策略</div>
+            </div>
+            <div class="status-item">
+                <div class="status-value" id="totalOpportunities">0</div>
+                <div class="status-label">套利机会</div>
+            </div>
+            <div class="status-item">
+                <div class="status-value" id="todayProfit">+0.00%</div>
+                <div class="status-label">今日收益</div>
+            </div>
+            <div class="status-item">
+                <div class="status-value" id="totalBalance">$0</div>
+                <div class="status-label">总资产</div>
+            </div>
+            <div class="status-item">
+                <div class="status-value" id="successRate">0.0%</div>
+                <div class="status-label">策略成功率</div>
+            </div>
+            <div class="status-item">
+                <div class="status-value" id="systemStatus">🟢</div>
+                <div class="status-label">系统状态</div>
+            </div>
+        </div>
+
+        <!-- Main Content Tabs -->
+        <div class="main-content">
+            <!-- Tab Navigation -->
+            <div class="tab-navigation">
+                <button class="tab-button active" onclick="showTab('dashboard')">Dashboard</button>
+                <button class="tab-button" onclick="showTab('market-monitoring')">Market Monitoring</button>
+                <button class="tab-button" onclick="showTab('order-records')">Order Records</button>
+                <button class="tab-button" onclick="showTab('rules-settings')">Rules Settings</button>
+            </div>
+
+            <!-- Dashboard Tab -->
+            <div id="dashboard" class="tab-content active">
+                <div class="section-header">
+                    <h2>Dashboard Overview</h2>
+                </div>
+                
+                <div class="controls-panel">
+                    <h3 style="margin-bottom: 15px; color: #fff;">活跃策略监控</h3>
+                    <div id="activeStrategiesContent">
+                        <div class="loading">
+                            <div class="spinner"></div>
+                            <p>Loading active strategies...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Market Monitoring Tab -->
+            <div id="market-monitoring" class="tab-content">
+                <div class="section-header">
+                    <h2>Market Monitoring</h2>
+                </div>
+                
+                <!-- Enhanced Market Monitoring Controls -->
+                <div class="controls-panel">
+                    <div class="filter-section-title">基础筛选</div>
+                    <!-- 第一行：基础筛选 -->
+                    <div class="controls-row">
+                        <div class="control-group">
+                            <label for="arbitrageType">套利类型</label>
+                            <select id="arbitrageType">
+                                <option value="futures-futures" selected>期期套利</option>
+                                <option value="futures-spot" disabled>期现套利</option>
+                                <option value="spot-spot" disabled>现现套利</option>
+                            </select>
+                        </div>
+                        <div class="control-group">
+                            <label for="minSpread">最小价差 (%)</label>
+                            <input type="number" id="minSpread" value="0.05" step="0.01" min="0">
+                        </div>
+                        <div class="control-group">
+                            <label for="minProfit">最小利润 (%)</label>
+                            <input type="number" id="minProfit" value="0.02" step="0.01" min="0">
+                        </div>
+                        <div class="control-group">
+                            <label for="symbolFilter">交易对</label>
+                            <select id="symbolFilter">
+                                <option value="">全部交易对</option>
+                                <option value="BTC-USDT">BTC-USDT</option>
+                                <option value="ETH-USDT">ETH-USDT</option>
+                                <option value="ADA-USDT">ADA-USDT</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="filter-section-title">交易所设置</div>
+                    <!-- 第二行：增强筛选 -->
+                    <div class="controls-row">
+                        <div class="control-group">
+                            <label for="exchangeA">Buy交易所</label>
+                            <select id="exchangeA">
+                                <option value="">请选择</option>
+                                <option value="binance">Binance</option>
+                                <option value="okx">OKX</option>
+                                <option value="bybit">Bybit</option>
+                            </select>
+                        </div>
+                        <div class="control-group">
+                            <label for="exchangeB">Sell交易所</label>
+                            <select id="exchangeB">
+                                <option value="">请选择</option>
+                                <option value="binance">Binance</option>
+                                <option value="okx">OKX</option>
+                                <option value="bybit">Bybit</option>
+                            </select>
+                        </div>
+                        <div class="control-group">
+                            <label for="fundingPeriod">资金费周期</label>
+                            <select id="fundingPeriod">
+                                <option value="">不限制</option>
+                                <option value="8h">8小时</option>
+                                <option value="4h">4小时</option>
+                            </select>
+                        </div>
+                        <div class="control-group">
+                            <label for="openSpreadThreshold">盘差 (%)</label>
+                            <input type="number" id="openSpreadThreshold" value="0.06" step="0.01" min="0">
+                        </div>
+                    </div>
+                    
+                    <div class="filter-section-title">操作控制</div>
+                    <!-- 第三行：操作按钮 -->
+                    <div class="controls-row">
+                        <button class="btn btn-primary" onclick="scanOpportunities()">
+                            <span class="spinner" id="scanSpinner" style="display: none;"></span>
+                            扫描机会
+                        </button>
+                        <button class="btn btn-success" id="autoTradingBtn" onclick="enableAutoTrading()">启动自动交易</button>
+                        <button class="btn btn-secondary" onclick="saveFilters()">保存筛选</button>
+                    </div>
+                </div>
+                
+                <div id="opportunitiesContent">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p>Loading opportunities...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Records Tab -->
+            <div id="order-records" class="tab-content">
+                <div class="section-header">
+                    <h2>Order Records Management</h2>
+                </div>
+                
+                <!-- Order Records Controls -->
+                <div class="controls-panel">
+                    <div class="controls-row">
+                        <div class="control-group">
+                            <label for="orderTimeRange">时间范围</label>
+                            <select id="orderTimeRange">
+                                <option value="today">今日</option>
+                                <option value="week" selected>最近7天</option>
+                                <option value="month">最近30天</option>
+                                <option value="custom">自定义</option>
+                            </select>
+                        </div>
+                        <div class="control-group">
+                            <label for="orderSymbolFilter">交易对</label>
+                            <select id="orderSymbolFilter">
+                                <option value="">全部交易对</option>
+                                <option value="BTC-USDT">BTC-USDT</option>
+                                <option value="ETH-USDT">ETH-USDT</option>
+                                <option value="ADA-USDT">ADA-USDT</option>
+                            </select>
+                        </div>
+                        <div class="control-group">
+                            <label for="orderStatusFilter">状态</label>
+                            <select id="orderStatusFilter">
+                                <option value="">全部状态</option>
+                                <option value="active">运行中</option>
+                                <option value="closed">已关闭</option>
+                                <option value="pending_close">待关闭</option>
+                            </select>
+                        </div>
+                        <div class="control-group">
+                            <label for="orderExchangeFilter">交易所</label>
+                            <select id="orderExchangeFilter">
+                                <option value="">全部交易所</option>
+                                <option value="binance">Binance</option>
+                                <option value="okx">OKX</option>
+                                <option value="bybit">Bybit</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="controls-row">
+                        <button class="btn btn-primary" onclick="refreshOrderRecords()">
+                            刷新订单
+                        </button>
+                        <button class="btn btn-secondary" onclick="exportOrderRecords()">
+                            导出数据
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="orderRecordsContent">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p>Loading order records...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rules Settings Tab -->
+            <div id="rules-settings" class="tab-content">
+                <div class="section-header">
+                    <h2>Rules Configuration</h2>
+                </div>
+                
+                <div class="controls-panel">
+                    <div class="controls-row">
+                        <button class="btn btn-primary" onclick="createNewRule()">
+                            新建规则
+                        </button>
+                        <button class="btn btn-success" onclick="useTemplate()">
+                            使用模板
+                        </button>
+                        <button class="btn btn-secondary" onclick="exportRules()">
+                            导出规则
+                        </button>
+                        <button class="btn btn-secondary" onclick="importRules()">
+                            导入规则
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="rulesContent">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p>Loading rules configuration...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Trade Modal -->
+    <div id="tradeModal" class="trade-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Execute Trade</h3>
+                <span class="close" onclick="closeTradeModal()">&times;</span>
+            </div>
+            <div id="modalBody">
+                <!-- Trade details will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Position Opening Modal -->
+    <div id="positionModal" class="trade-modal">
+        <div class="modal-content" style="width: 600px; max-width: 95%;">
+            <div class="modal-header">
+                <h3>开仓套利位置</h3>
+                <span class="close" onclick="closePositionModal()">&times;</span>
+            </div>
+            <div id="positionModalBody">
+                <!-- Position details will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Close Position Modal -->
+    <div id="closeModal" class="trade-modal">
+        <div class="modal-content" style="width: 600px; max-width: 95%;">
+            <div class="modal-header">
+                <h3 id="closeModalTitle">关闭套利仓位</h3>
+                <span class="close" onclick="closeCloseModal()">&times;</span>
+            </div>
+            <div id="closeModalBody">
+                <!-- Close details will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Single Trade Close Modal -->
+    <div id="tradeCloseModal" class="trade-modal">
+        <div class="modal-content" style="width: 500px; max-width: 95%;">
+            <div class="modal-header">
+                <h3>平仓交易</h3>
+                <span class="close" onclick="closeTradeCloseModal()">&times;</span>
+            </div>
+            <div id="tradeCloseModalBody">
+                <!-- Trade close details will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Arbitrage Details Modal -->
+    <div id="detailsModal" class="trade-modal">
+        <div class="modal-content" style="width: 800px; max-width: 95%;">
+            <div class="modal-header">
+                <h3>套利详情</h3>
+                <span class="close" onclick="closeDetailsModal()">&times;</span>
+            </div>
+            <div id="detailsModalBody">
+                <!-- Details will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Rules Configuration Modal -->
+    <div id="rulesModal" class="trade-modal">
+        <div class="modal-content" style="width: 800px; max-width: 95%;">
+            <div class="modal-header">
+                <h3>规则调整</h3>
+                <span class="close" onclick="closeRulesModal()">&times;</span>
+            </div>
+
+            <!-- Rule Name and List Section -->
+            <div style="margin-bottom: 25px; padding: 15px; background: rgba(31, 41, 55, 0.5); border-radius: 8px;">
+                <div style="display: flex; gap: 15px; align-items: center; margin-bottom: 15px;">
+                    <div class="control-group" style="flex: 1;">
+                        <label for="ruleName">规则名称</label>
+                        <input type="text" id="ruleName" placeholder="输入规则名称，如：BTC套利策略-保守型" 
+                               style="width: 100%;">
+                    </div>
+                    <div style="display: flex; gap: 10px; margin-top: 20px;">
+                        <button class="btn btn-primary" onclick="saveRuleConfiguration()">保存规则</button>
+                        <button class="btn btn-success" onclick="useTemplateData()">使用模板填充</button>
+                    </div>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <h6 style="color: #60a5fa; margin: 0;">已保存规则</h6>
+                    <button class="btn btn-secondary" onclick="toggleRulesList()" id="toggleRulesBtn" 
+                            style="font-size: 12px; padding: 4px 8px;">隐藏列表</button>
+                </div>
+                
+                <div id="savedRulesList" style="display: block; max-height: 200px; overflow-y: auto; border: 1px solid #374151; border-radius: 6px; background: rgba(17, 24, 39, 0.8);">
+                    <div id="rulesListContent" style="padding: 10px;">
+                        <div style="text-align: center; color: #888; font-size: 12px; padding: 20px;">
+                            暂无保存的规则<br>
+                            <small style="color: #666; margin-top: 8px; display: block;">填写配置并输入规则名称后点击"保存规则"来创建</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons and Options -->
+            <div style="margin-bottom: 20px;">
+                <label style="color: #ccc;">
+                    <input type="checkbox" id="bidirectionalCreate"> 双向创建(建议仅用于期期)
+                </label>
+            </div>
+            
+            <!-- Dual Column Layout -->
+            <div class="rules-config-container">
+                <!-- Long Position Config -->
+                <div class="rules-config-section">
+                    <h5>做多快捷输入</h5>
+                    <div class="control-group">
+                        <label>选择多头</label>
+                        <select id="longContract">
+                            <option>请选择</option>
+                            <option value="BTCUSDT-PERP">BTC永续USDT-BY合约</option>
+                            <option value="ETHUSDT-PERP">ETH永续USDT-BN合约</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label>做多交易所</label>
+                        <select id="longExchange">
+                            <option>请选择</option>
+                            <option value="binance">Binance</option>
+                            <option value="okx">OKX</option>
+                            <option value="bybit">Bybit</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label>做多账户</label>
+                        <select id="longAccount">
+                            <option>请选择</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label>做多账户类型</label>
+                        <select id="longAccountType">
+                            <option>请选择</option>
+                            <option value="futures">期货账户</option>
+                            <option value="spot">现货账户</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label>做多结算币</label>
+                        <select id="longSettleCurrency">
+                            <option>请选择</option>
+                            <option value="USDT">USDT</option>
+                            <option value="USD">USD</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label>做多币名</label>
+                        <select id="longCurrency">
+                            <option>请选择</option>
+                            <option value="BTC">BTC</option>
+                            <option value="ETH">ETH</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label>做多杠杆倍数</label>
+                        <input type="number" id="longLeverage" value="1" min="1" max="100">
+                    </div>
+                    <div class="control-group">
+                        <label>做多开仓手续费(%)</label>
+                        <input type="number" id="longOpenFee" value="0" step="0.001">
+                    </div>
+                    <div class="control-group">
+                        <label>做多平仓手续费(%)</label>
+                        <input type="number" id="longCloseFee" value="0" step="0.001">
+                    </div>
+                </div>
+                
+                <!-- Short Position Config -->
+                <div class="rules-config-section">
+                    <h5>做空快捷输入</h5>
+                    <div class="control-group">
+                        <label>选择空头</label>
+                        <select id="shortContract">
+                            <option>请选择</option>
+                            <option value="BTCUSDT-PERP">BTC永续USDT-BY合约</option>
+                            <option value="ETHUSDT-PERP">ETH永续USDT-BN合约</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label>做空交易所</label>
+                        <select id="shortExchange">
+                            <option>请选择</option>
+                            <option value="binance">Binance</option>
+                            <option value="okx">OKX</option>
+                            <option value="bybit">Bybit</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label>做空账户</label>
+                        <select id="shortAccount">
+                            <option>请选择</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label>做空账户类型</label>
+                        <select id="shortAccountType">
+                            <option>请选择</option>
+                            <option value="futures">期货账户</option>
+                            <option value="spot">现货账户</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label>做空结算币</label>
+                        <select id="shortSettleCurrency">
+                            <option>请选择</option>
+                            <option value="USDT">USDT</option>
+                            <option value="USD">USD</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label>做空币名</label>
+                        <select id="shortCurrency">
+                            <option>请选择</option>
+                            <option value="BTC">BTC</option>
+                            <option value="ETH">ETH</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label>做空杠杆倍数</label>
+                        <input type="number" id="shortLeverage" value="1" min="1" max="100">
+                    </div>
+                    <div class="control-group">
+                        <label>做空开仓手续费(%)</label>
+                        <input type="number" id="shortOpenFee" value="0" step="0.001">
+                    </div>
+                    <div class="control-group">
+                        <label>做空平仓手续费(%)</label>
+                        <input type="number" id="shortCloseFee" value="0" step="0.001">
+                    </div>
+                </div>
+            </div>
+            
+                        <!-- Global Settings -->
+            <div class="trade-form-section">
+                <h5>全局设置</h5>
+                <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                    <div class="control-group" style="flex: 1; min-width: 200px;">
+                        <label for="fundingSettlementPeriod">资金费结算周期</label>
+                        <select id="fundingSettlementPeriod">
+                            <option value="">不作要求</option>
+                            <option value="8h">8小时</option>
+                            <option value="4h">4小时</option>
+                            <option value="1h">1小时</option>
+                        </select>
+                    </div>
+                    <div class="control-group" style="flex: 1; min-width: 200px;">
+                        <label for="minOrderAmount">最小下单金额 (USDT)</label>
+                        <input type="number" id="minOrderAmount" value="100" min="10" step="10" 
+                               placeholder="最小下单金额">
+                    </div>
+                    <div class="control-group" style="flex: 1; min-width: 200px;">
+                        <label for="maxOrderAmount">最大下单金额 (USDT)</label>
+                        <input type="number" id="maxOrderAmount" value="10000" min="100" step="100" 
+                               placeholder="最大下单金额">
+                    </div>
+                </div>
+                <div style="margin-top: 10px; padding: 10px; background: rgba(59, 130, 246, 0.1); border: 1px solid #3b82f6; border-radius: 5px;">
+                    <div style="font-size: 12px; color: #60a5fa; margin-bottom: 5px;">
+                        <strong>下单金额说明：</strong>
+                    </div>
+                    <div style="font-size: 11px; color: #ccc; line-height: 1.4;">
+                        • <strong>最小下单金额</strong>：单次套利的最小投入资金，用于控制最小交易规模<br>
+                        • <strong>最大下单金额</strong>：单次套利的最大投入资金，用于风险控制和资金管理<br>
+                        • 实际下单金额会在此范围内根据账户余额和风险设置自动调整
+                    </div>
+                </div>
+            </div>
+
+            <!-- Close Position Management -->
+            <div class="trade-form-section" style="margin-top: 25px;">
+                <h5>平仓管理</h5>
+                
+                <!-- 盈亏控制指标 -->
+                <div style="background: rgba(16, 185, 129, 0.05); border: 1px solid #10b981; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+                    <h6 style="color: #10b981; margin-bottom: 15px; font-size: 14px;">📈 盈亏控制指标</h6>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                        <div class="control-group">
+                            <label for="takeProfitPercent">止盈百分比 (%)</label>
+                            <input type="number" id="takeProfitPercent" value="2.5" min="0.1" max="10" step="0.1" 
+                                   placeholder="目标收益率">
+                            <small style="color: #888; font-size: 10px; margin-top: 2px;">达到此收益率自动平仓</small>
+                        </div>
+                        <div class="control-group">
+                            <label for="stopLossPercent">止损百分比 (%)</label>
+                            <input type="number" id="stopLossPercent" value="-1.0" min="-5" max="-0.1" step="0.1" 
+                                   placeholder="最大亏损率">
+                            <small style="color: #888; font-size: 10px; margin-top: 2px;">达到此亏损率强制平仓</small>
+                        </div>
+                        <div class="control-group">
+                            <label for="maxLossAmount">最大浮亏金额 (USDT)</label>
+                            <input type="number" id="maxLossAmount" value="500" min="50" step="50" 
+                                   placeholder="绝对止损金额">
+                            <small style="color: #888; font-size: 10px; margin-top: 2px;">绝对金额止损线</small>
+                        </div>
+                                                 <div class="control-group">
+                             <label for="profitLossRatio">盈亏比要求</label>
+                             <select id="profitLossRatio">
+                                 <option value="1:1">1:1 (一般)</option>
+                                 <option value="2:1" selected>2:1 (推荐)</option>
+                                 <option value="3:1">3:1 (保守)</option>
+                                 <option value="custom">自定义</option>
+                             </select>
+                             <small style="color: #888; font-size: 10px; margin-top: 2px;">最小盈亏比例要求</small>
+                             <div id="currentProfitLossRatio" style="margin-top: 6px; font-size: 11px; font-weight: bold;">
+                                 当前比例: 计算中...
+                             </div>
+                         </div>
+                    </div>
+                </div>
+                
+                <!-- 时间管理指标 -->
+                <div style="background: rgba(59, 130, 246, 0.05); border: 1px solid #3b82f6; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+                    <h6 style="color: #60a5fa; margin-bottom: 15px; font-size: 14px;">⏰ 时间管理指标</h6>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                        <div class="control-group">
+                            <label for="maxHoldingTime">最大持仓时间 (小时)</label>
+                            <input type="number" id="maxHoldingTime" value="48" min="1" max="168" step="1" 
+                                   placeholder="最大持仓时间">
+                            <small style="color: #888; font-size: 10px; margin-top: 2px;">超时自动平仓</small>
+                        </div>
+                        <div class="control-group">
+                            <label for="fundingCloseBuffer">资金费结算前平仓 (分钟)</label>
+                            <input type="number" id="fundingCloseBuffer" value="45" min="5" max="120" step="5" 
+                                   placeholder="结算前平仓时间">
+                            <small style="color: #888; font-size: 10px; margin-top: 2px;">结算前多久平仓</small>
+                        </div>
+                        <div class="control-group">
+                            <label for="forcedCloseTime">强制平仓时间</label>
+                            <select id="forcedCloseTime">
+                                <option value="">不设置</option>
+                                <option value="02:00">凌晨 02:00</option>
+                                <option value="06:00">凌晨 06:00</option>
+                                <option value="14:00">下午 14:00</option>
+                                <option value="22:00">晚上 22:00</option>
+                                <option value="custom">自定义时间</option>
+                            </select>
+                            <small style="color: #888; font-size: 10px; margin-top: 2px;">每日固定平仓时间</small>
+                        </div>
+                        <div class="control-group">
+                            <label for="closeTimeOffset">平仓时间偏移 (分钟)</label>
+                            <input type="number" id="closeTimeOffset" value="0" min="-60" max="60" step="5" 
+                                   placeholder="时间偏移">
+                            <small style="color: #888; font-size: 10px; margin-top: 2px;">相对于强制时间的偏移</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 平仓策略说明 -->
+                <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid #f59e0b; border-radius: 6px; padding: 12px;">
+                    <div style="font-size: 12px; color: #f59e0b; margin-bottom: 8px;">
+                        <strong>⚠️ 平仓管理说明：</strong>
+                    </div>
+                    <div style="font-size: 11px; color: #ccc; line-height: 1.5;">
+                        <strong>盈亏控制：</strong> 系统将根据设定的止盈止损条件自动触发平仓，优先保护资金安全<br>
+                        <strong>时间管理：</strong> 通过时间限制避免长期持仓风险，特别关注资金费结算时间点<br>
+                        <strong>执行优先级：</strong> 止损 > 时间限制 > 止盈，确保风险优先控制<br>
+                        <strong>平仓方式：</strong> 默认市价平仓确保快速执行，紧急情况下可强制平仓
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rule Details Modal -->
+    <div id="ruleDetailsModal" class="trade-modal">
+        <div class="modal-content" style="width: 700px; max-width: 95%;">
+            <div class="modal-header">
+                <h3 id="ruleDetailsTitle">规则详情</h3>
+                <span class="close" onclick="closeRuleDetailsModal()">&times;</span>
+            </div>
+            <div id="ruleDetailsContent" style="max-height: 500px; overflow-y: auto;">
+                <!-- Rule details will be populated here -->
+            </div>
+            <div style="margin-top: 20px; text-align: center;">
+                <button class="btn btn-secondary" onclick="closeRuleDetailsModal()">关闭</button>
+                <button class="btn btn-primary" id="loadRuleFromDetails" onclick="" style="margin-left: 10px;">加载此规则</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let opportunities = [];
+        let orderRecords = [];
+        let activeStrategies = [];
+        let autoTradingEnabled = false;
+        let refreshInterval;
+        let scanInProgress = false;
+        let savedRules = JSON.parse(localStorage.getItem('arbitrageRules')) || [];
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            showTab('dashboard');
+            startAutoRefresh();
+            setupFilterEventListeners();
+        });
+
+        // Tab switching functionality
+        function showTab(tabName) {
+            // Hide all tab contents
+            const tabContents = document.querySelectorAll('.tab-content');
+            tabContents.forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Remove active class from all tab buttons
+            const tabButtons = document.querySelectorAll('.tab-button');
+            tabButtons.forEach(button => {
+                button.classList.remove('active');
+            });
+            
+            // Show selected tab content
+            document.getElementById(tabName).classList.add('active');
+            
+            // Add active class to clicked button
+            event.target.classList.add('active');
+            
+            // Load content based on tab
+            switch(tabName) {
+                case 'dashboard':
+                    loadDashboard();
+                    break;
+                case 'market-monitoring':
+                    scanOpportunities();
+                    break;
+                case 'order-records':
+                    loadOrderRecords();
+                    break;
+                case 'rules-settings':
+                    loadRulesSettings();
+                    break;
+            }
+        }
+
+        // Dashboard functions
+        function loadDashboard() {
+            updateDashboardMetrics();
+            loadActiveStrategies();
+        }
+
+        function updateDashboardMetrics() {
+            // Generate mock dashboard data
+            const dashboardData = {
+                activeStrategies: Math.floor(Math.random() * 10) + 1,
+                totalOpportunities: Math.floor(Math.random() * 50) + 10,
+                todayProfit: (Math.random() * 5 - 1).toFixed(2),
+                totalBalance: (50000 + Math.random() * 50000).toFixed(0),
+                successRate: (85 + Math.random() * 10).toFixed(1),
+                systemStatus: 'ONLINE'
+            };
+
+            document.getElementById('activeStrategies').textContent = dashboardData.activeStrategies;
+            document.getElementById('totalOpportunities').textContent = dashboardData.totalOpportunities;
+            document.getElementById('todayProfit').textContent = `${dashboardData.todayProfit > 0 ? '+' : ''}${dashboardData.todayProfit}%`;
+            document.getElementById('totalBalance').textContent = `$${parseInt(dashboardData.totalBalance).toLocaleString()}`;
+            document.getElementById('successRate').textContent = `${dashboardData.successRate}%`;
+            document.getElementById('systemStatus').textContent = dashboardData.systemStatus;
+
+            // Update profit color
+            const profitElement = document.getElementById('todayProfit');
+            profitElement.className = dashboardData.todayProfit > 0 ? 'status-value profit-positive' : 'status-value profit-negative';
+        }
+
+        function loadActiveStrategies() {
+            const content = document.getElementById('activeStrategiesContent');
+            
+            // Generate mock active strategies
+            const mockStrategies = generateMockActiveStrategies();
+            
+            if (mockStrategies.length === 0) {
+                content.innerHTML = `
+                    <div class="loading">
+                        <p style="color: #888;">暂无活跃策略</p>
+                        <p style="color: #666;">前往市场监控页面启动套利策略</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const table = `
+                <table class="opportunities-table">
+                    <thead>
+                        <tr>
+                            <th>策略ID</th>
+                            <th>交易对</th>
+                            <th>交易所对</th>
+                            <th>运行时长</th>
+                            <th>当前盈亏</th>
+                            <th>状态</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${mockStrategies.map(strategy => `
+                            <tr class="opportunity-row">
+                                <td>${strategy.id}</td>
+                                <td><strong>${strategy.symbol}</strong></td>
+                                <td>
+                                    <span class="exchange-badge exchange-${strategy.exchangeA}">${strategy.exchangeA.toUpperCase()}</span>
+                                    ⟷
+                                    <span class="exchange-badge exchange-${strategy.exchangeB}">${strategy.exchangeB.toUpperCase()}</span>
+                                </td>
+                                <td>${strategy.duration}</td>
+                                <td class="${strategy.pnl > 0 ? 'profit-positive' : 'profit-negative'}">
+                                    ${strategy.pnl > 0 ? '+' : ''}$${strategy.pnl.toFixed(2)} (${strategy.pnlPercent > 0 ? '+' : ''}${strategy.pnlPercent.toFixed(2)}%)
+                                </td>
+                                <td>运行中</td>
+                                <td>
+                                    <button class="btn btn-primary" style="padding: 4px 8px; font-size: 12px;" onclick="viewStrategyDetails('${strategy.id}')">详情</button>
+                                    <button class="btn btn-danger" style="padding: 4px 8px; font-size: 12px;" onclick="stopStrategy('${strategy.id}')">停止</button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+            
+            content.innerHTML = table;
+        }
+
+        function generateMockActiveStrategies() {
+            const symbols = ['BTC-USDT', 'ETH-USDT', 'ADA-USDT'];
+            const exchanges = ['binance', 'okx', 'bybit'];
+            const strategies = [];
+            
+            for (let i = 0; i < 3; i++) {
+                const symbol = symbols[i % symbols.length];
+                const exchangeA = exchanges[i % exchanges.length];
+                let exchangeB = exchanges[(i + 1) % exchanges.length];
+                
+                // Generate running duration
+                const hours = Math.floor(Math.random() * 12);
+                const minutes = Math.floor(Math.random() * 60);
+                const duration = `${hours}h ${minutes}m`;
+                
+                // Generate PnL
+                const pnl = (Math.random() * 300 - 50);
+                const pnlPercent = (Math.random() * 5 - 1);
+                
+                strategies.push({
+                    id: `ARB-${String(i + 1).padStart(3, '0')}`,
+                    symbol: symbol,
+                    exchangeA: exchangeA,
+                    exchangeB: exchangeB,
+                    duration: duration,
+                    pnl: pnl,
+                    pnlPercent: pnlPercent
+                });
+            }
+            
+            return strategies;
+        }
+
+        // Market Monitoring functions (保持现有功能)
+        function scanOpportunities() {
+            if (scanInProgress) return;
+            
+            scanInProgress = true;
+            showLoading();
+            
+            // 模拟API调用
+            setTimeout(() => {
+                const mockData = generateMockOpportunities();
+                opportunities = mockData.opportunities;
+                updateDashboardMetrics();
+                renderOpportunities();
+                scanInProgress = false;
+            }, 1500);
+        }
+
+        function generateMockOpportunities() {
+            const symbols = ['BTC-USDT', 'ETH-USDT', 'ADA-USDT', 'SOL-USDT'];
+            const exchanges = ['binance', 'okx', 'bybit'];
+            const mockOpportunities = [];
+            
+            for (let i = 0; i < 8; i++) {
+                const symbol = symbols[Math.floor(Math.random() * symbols.length)];
+                const buyEx = exchanges[Math.floor(Math.random() * exchanges.length)];
+                let sellEx = exchanges[Math.floor(Math.random() * exchanges.length)];
+                while (sellEx === buyEx) {
+                    sellEx = exchanges[Math.floor(Math.random() * exchanges.length)];
+                }
+                
+                const basePrice = 40000 + Math.random() * 20000;
+                const spread = 0.05 + Math.random() * 0.3;
+                const buyPrice = basePrice;
+                const sellPrice = basePrice * (1 + spread / 100);
+                
+                // Generate bid/ask prices for spread calculation
+                const buyBid = buyPrice * (1 - 0.0005 - Math.random() * 0.0005); // 买一价格
+                const buyAsk = buyPrice * (1 + 0.0005 + Math.random() * 0.0005); // 卖一价格
+                const sellBid = sellPrice * (1 - 0.0005 - Math.random() * 0.0005);
+                const sellAsk = sellPrice * (1 + 0.0005 + Math.random() * 0.0005);
+                
+                // Calculate spread percentages
+                const buySpread = ((buyAsk - buyBid) / buyBid) * 100;
+                const sellSpread = ((sellAsk - sellBid) / sellBid) * 100;
+                
+                // Generate spot price spread between exchanges
+                const spotSpread = ((sellPrice - buyPrice) / buyPrice) * 100;
+                
+                // Generate 24H amplitude (振幅)
+                const amplitude24h = (Math.random() * 8) + 2; // 2% to 10%
+                
+                // Generate 24H trading volume
+                const volume24h = (Math.random() * 500000000) + 50000000; // 50M to 550M USDT
+                
+                // Generate funding rates with timing info
+                const buyFundingRate = (Math.random() - 0.5) * 0.002;
+                const sellFundingRate = (Math.random() - 0.5) * 0.002;
+                
+                // Generate funding rate end times (next settlement)
+                const now = new Date();
+                const nextSettlement = new Date(now);
+                nextSettlement.setHours(Math.floor(now.getHours() / 8) * 8 + 8, 0, 0, 0);
+                if (nextSettlement <= now) {
+                    nextSettlement.setDate(nextSettlement.getDate() + 1);
+                    nextSettlement.setHours(0, 0, 0, 0);
+                }
+                
+                // Generate position info
+                const positionSize = Math.random() * 5 + 0.5;
+                
+                mockOpportunities.push({
+                    symbol: symbol,
+                    buy_exchange: buyEx,
+                    sell_exchange: sellEx,
+                    buy_price: buyPrice,
+                    sell_price: sellPrice,
+                    spread_percentage: spread,
+                    estimated_profit: spread - 0.1,
+                    confidence_score: 60 + Math.random() * 35,
+                    recommended_amount: 1000 + Math.random() * 2000,
+                    timestamp: new Date().toISOString(),
+                    risk_score: Math.random() * 5,
+                    // New fields for updated display
+                    buy_bid: buyBid,
+                    buy_ask: buyAsk,
+                    buy_spread_percent: buySpread,
+                    sell_bid: sellBid,
+                    sell_ask: sellAsk,
+                    sell_spread_percent: sellSpread,
+                    spot_spread: spotSpread,
+                    amplitude_24h: amplitude24h,
+                    volume_24h: volume24h,
+                    buy_funding_rate: buyFundingRate,
+                    sell_funding_rate: sellFundingRate,
+                    funding_end_time: nextSettlement.toISOString(),
+                    funding_cycle: '8H', // Settlement cycle
+                    position_size: positionSize
+                });
+            }
+            
+            return {
+                opportunities: mockOpportunities.sort((a, b) => b.estimated_profit - a.estimated_profit),
+                total_count: mockOpportunities.length
+            };
+        }
+
+        function renderOpportunities() {
+            const content = document.getElementById('opportunitiesContent');
+            
+            if (opportunities.length === 0) {
+                content.innerHTML = `
+                    <div class="loading">
+                        <p style="color: #888;">暂无套利机会</p>
+                        <p style="color: #666;">调整筛选条件或等待市场变化</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const table = `
+                <table class="opportunities-table">
+                    <thead>
+                        <tr>
+                            <th>交易对</th>
+                            <th>策略</th>
+                            <th>价差</th>
+                            <th>盘差（Buy）</th>
+                            <th>盘差（Sell）</th>
+                            <th>24H 振幅（%）</th>
+                            <th>24H 交易额</th>
+                            <th>净资金费</th>
+                            <th>仓位状态</th>
+                            <th>预期收益</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${opportunities.map((opp, index) => renderOpportunityRow(opp, index)).join('')}
+                    </tbody>
+                </table>
+            `;
+            
+            content.innerHTML = table;
+        }
+
+        function renderOpportunityRow(opp, index) {
+            const profitClass = (opp.estimated_profit || 0) > 0 ? 'profit-positive' : 'profit-negative';
+            
+            // Format funding end time
+            const fundingEndTime = new Date(opp.funding_end_time);
+            const endTimeStr = fundingEndTime.toLocaleTimeString('zh-CN', { 
+                hour: '2-digit', 
+                minute: '2-digit', 
+                hour12: false 
+            });
+            
+            // Calculate time to settlement
+            const now = new Date();
+            const timeToSettlement = Math.floor((fundingEndTime - now) / (1000 * 60)); // minutes
+            const hoursToSettlement = Math.floor(timeToSettlement / 60);
+            const minutesToSettlement = timeToSettlement % 60;
+            const timeToSettlementStr = `${hoursToSettlement}h${minutesToSettlement}m`;
+            
+            // Format volume
+            const volumeStr = opp.volume_24h >= 1000000 ? 
+                `${(opp.volume_24h / 1000000).toFixed(1)}M` : 
+                `${(opp.volume_24h / 1000).toFixed(0)}K`;
+            
+            return `
+                <tr class="opportunity-row" style="animation-delay: ${index * 0.1}s;">
+                    <td>
+                        <strong>${opp.symbol}</strong><br>
+                        <small style="color: #888;">永续合约</small>
+                    </td>
+                    <td>
+                        <div style="font-size: 12px;">
+                            <div style="margin-bottom: 4px;">
+                                Buy: <span class="exchange-badge exchange-${opp.buy_exchange}">${opp.buy_exchange.toUpperCase()}</span> 
+                                $${opp.buy_price.toFixed(2)}
+                            </div>
+                            <div>
+                                Sell: <span class="exchange-badge exchange-${opp.sell_exchange}">${opp.sell_exchange.toUpperCase()}</span> 
+                                $${opp.sell_price.toFixed(2)}
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div style="font-size: 12px; text-align: center;">
+                            <div style="color: #10b981; font-weight: bold; margin-bottom: 2px;">
+                                +${opp.spot_spread.toFixed(3)}%
+                            </div>
+                            <div style="font-size: 10px; color: #888;">
+                                $${(opp.sell_price - opp.buy_price).toFixed(2)}
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div style="font-size: 11px;">
+                            <div style="margin-bottom: 2px;">
+                                买一: <span style="color: #10b981;">$${opp.buy_bid.toFixed(2)}</span>
+                            </div>
+                            <div style="margin-bottom: 2px;">
+                                卖一: <span style="color: #ef4444;">$${opp.buy_ask.toFixed(2)}</span>
+                            </div>
+                            <div class="profit-positive">
+                                ${opp.buy_spread_percent.toFixed(3)}%
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div style="font-size: 11px;">
+                            <div style="margin-bottom: 2px;">
+                                买一: <span style="color: #10b981;">$${opp.sell_bid.toFixed(2)}</span>
+                            </div>
+                            <div style="margin-bottom: 2px;">
+                                卖一: <span style="color: #ef4444;">$${opp.sell_ask.toFixed(2)}</span>
+                            </div>
+                            <div class="profit-positive">
+                                ${opp.sell_spread_percent.toFixed(3)}%
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div style="font-size: 12px; text-align: center;">
+                            <span class="profit-positive">±${opp.amplitude_24h.toFixed(2)}%</span>
+                        </div>
+                    </td>
+                    <td>
+                        <div style="font-size: 12px; text-align: center;">
+                            <strong>$${volumeStr}</strong><br>
+                            <small style="color: #888;">USDT</small>
+                        </div>
+                    </td>
+                    <td>
+                        <div style="font-size: 10px;">
+                            <div style="margin-bottom: 3px;">
+                                Buy: <span class="${opp.buy_funding_rate >= 0 ? 'profit-positive' : 'profit-negative'}">
+                                    ${opp.buy_funding_rate >= 0 ? '+' : ''}${(opp.buy_funding_rate * 100).toFixed(3)}%
+                                </span> | ${timeToSettlementStr} | ${opp.funding_cycle}
+                            </div>
+                            <div>
+                                Sell: <span class="${opp.sell_funding_rate >= 0 ? 'profit-positive' : 'profit-negative'}">
+                            ${opp.sell_funding_rate >= 0 ? '+' : ''}${(opp.sell_funding_rate * 100).toFixed(3)}%
+                                </span> | ${timeToSettlementStr} | ${opp.funding_cycle}
+                            </div>
+                        </div>
+                    </td>
+                    <td style="font-size: 12px;">
+                        <div>多: ${opp.position_size.toFixed(1)} ${opp.symbol.split('-')[0]}</div>
+                        <div>空: ${opp.position_size.toFixed(1)} ${opp.symbol.split('-')[0]}</div>
+                    </td>
+                    <td>
+                        <span class="${profitClass}">+${(opp.estimated_profit || 0).toFixed(3)}%</span>
+                    </td>
+                    <td>
+                        <button class="btn btn-success" style="padding: 6px 12px; font-size: 12px;" onclick="openPositionModal('${encodeURIComponent(JSON.stringify(opp))}')">
+                            开仓
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }
+
+        // Helper functions for order records
+        function getStatusClass(status) {
+            const statusClasses = {
+                'active': 'status-pending',
+                'closed': 'status-filled',
+                'pending_close': 'status-partial'
+            };
+            return statusClasses[status] || 'status-pending';
+        }
+
+        function getStatusText(status) {
+            const statusTexts = {
+                'active': '运行中',
+                'closed': '已关闭',
+                'pending_close': '待关闭'
+            };
+            return statusTexts[status] || '未知';
+        }
+
+        function getOrderStatusClass(status) {
+            const statusClasses = {
+                'filled': 'status-filled',
+                'partial': 'status-partial',
+                'pending': 'status-pending',
+                'cancelled': 'status-cancelled'
+            };
+            return statusClasses[status] || 'status-pending';
+        }
+
+        function getOrderStatusText(status) {
+            const statusTexts = {
+                'filled': '已成交',
+                'partial': '部分成交',
+                'pending': '待成交',
+                'cancelled': '已取消'
+            };
+            return statusTexts[status] || '未知';
+        }
+
+        function renderActionButtons(pair) {
+            if (pair.status === 'closed') {
+                return `
+                    <button class="btn btn-secondary" style="padding: 4px 8px; font-size: 12px;" onclick="viewArbitrageDetails('${pair.arbitrage_id}')">
+                        查看详情
+                    </button>
+                `;
+            } else if (pair.status === 'pending_close') {
+                 return `
+                    <div style="display: flex; flex-direction: column; gap: 4px;">
+                         <button class="btn btn-secondary" style="padding: 4px 8px; font-size: 12px;" onclick="viewArbitrageDetails('${pair.arbitrage_id}')">
+                            详情
+                        </button>
+                        <span style="color: #f59e0b; font-size: 11px; text-align: center; margin-top: 4px;">关单中...</span>
+                    </div>
+                `;
+            } else {
+                 return `
+                    <div style="display: flex; flex-direction: column; gap: 4px;">
+                                                 <button class="btn btn-danger" style="padding: 4px 8px; font-size: 12px;" onclick="openUnifiedCloseModal('${pair.arbitrage_id}')">
+                             平仓
+                         </button>
+                         <button class="btn btn-secondary" style="padding: 4px 8px; font-size: 12px;" onclick="viewArbitrageDetails('${pair.arbitrage_id}')">
+                             详情
+                         </button>
+                    </div>
+                `;
+            }
+        }
+
+        function renderTradeActionButtons(trade) {
+            if (trade.pair_status === 'closed') {
+                return `
+                    <button class="btn btn-secondary" style="padding: 4px 8px; font-size: 11px;" onclick="viewTradeDetails('${trade.trade_id}')">
+                        查看详情
+                    </button>
+                `;
+            } else if (trade.pair_status === 'pending_close') {
+                 return `
+                    <div style="display: flex; flex-direction: column; gap: 3px;">
+                         <button class="btn btn-secondary" style="padding: 3px 6px; font-size: 10px;" onclick="viewTradeDetails('${trade.trade_id}')">
+                            详情
+                        </button>
+                        <span style="color: #f59e0b; font-size: 10px; text-align: center;">关单中</span>
+                    </div>
+                `;
+            } else {
+                // For active trades, show different options based on order status
+                let buttons = [];
+                
+                if (trade.order_status === 'filled') {
+                    buttons.push(`
+                        <button class="btn btn-danger" style="padding: 3px 6px; font-size: 10px;" onclick="closeTrade('${trade.trade_id}')">
+                            平仓
+                        </button>
+                    `);
+                } else if (trade.order_status === 'partial') {
+                    buttons.push(`
+                        <button class="btn btn-warning" style="padding: 3px 6px; font-size: 10px;" onclick="modifyTrade('${trade.trade_id}')">
+                            改单
+                        </button>
+                    `);
+                } else if (trade.order_status === 'pending') {
+                    buttons.push(`
+                        <button class="btn btn-secondary" style="padding: 3px 6px; font-size: 10px;" onclick="cancelTrade('${trade.trade_id}')">
+                            撤单
+                        </button>
+                    `);
+                }
+                
+                buttons.push(`
+                    <button class="btn btn-secondary" style="padding: 3px 6px; font-size: 10px;" onclick="viewTradeDetails('${trade.trade_id}')">
+                        详情
+                    </button>
+                `);
+                
+                return `
+                    <div style="display: flex; flex-direction: column; gap: 3px;">
+                        ${buttons.join('')}
+                    </div>
+                `;
+            }
+        }
+
+        // Order Records functions (保持现有功能)
+        function loadOrderRecords() {
+            const content = document.getElementById('orderRecordsContent');
+            
+            // Generate mock order data
+            const mockOrders = generateMockOrderRecords();
+            orderRecords = mockOrders; // Assign to global variable
+            
+            if (mockOrders.length === 0) {
+                content.innerHTML = `
+                    <div class="loading">
+                        <p style="color: #888;">暂无订单记录</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Render individual trades table
+            const table = `
+                <table class="opportunities-table">
+                    <thead>
+                        <tr>
+                            <th>套利ID</th>
+                            <th>交易类型</th>
+                            <th>交易对</th>
+                            <th>交易所</th>
+                            <th>订单状态</th>
+                            <th>金额</th>
+                            <th>数量</th>
+                            <th>手续费</th>
+                            <th>资金费率</th>
+                            <th>当前盈亏</th>
+                            <th>时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${mockOrders.map(trade => `
+                            <tr class="opportunity-row ${trade.trade_type === 'LONG' ? 'trade-long' : 'trade-short'}">
+                                <td><strong>${trade.arbitrage_id}</strong></td>
+                                <td>
+                                    <div style="display: flex; align-items: center; gap: 6px;">
+                                        <span class="trade-type-badge ${trade.trade_type === 'LONG' ? 'badge-long' : 'badge-short'}">
+                                            ${trade.trade_type}
+                                    </span>
+                                        <span style="font-size: 11px; color: #888;">
+                                            ${trade.trade_type === 'LONG' ? '买入' : '卖出'}
+                                        </span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <strong>${trade.symbol}</strong><br>
+                                    <small style="color: #888;">期期套利</small>
+                                </td>
+                                <td>
+                                    <span class="exchange-badge exchange-${trade.exchange}">
+                                        ${trade.exchange.toUpperCase()}
+                                    </span><br>
+                                    <small style="color: #ccc;">$${trade.price.toFixed(2)}</small>
+                                </td>
+                                <td>
+                                    <span class="order-status ${getOrderStatusClass(trade.order_status)}">
+                                        ${getOrderStatusText(trade.order_status)}
+                                    </span>
+                                </td>
+                                <td>$${trade.amount.toFixed(0)}</td>
+                                <td style="font-size: 12px;">
+                                    <div style="text-align: center;">
+                                        <div style="font-weight: bold;">${trade.current_quantity.toFixed(4)}</div>
+                                        <div style="color: #888;">/ ${trade.quantity.toFixed(4)}</div>
+                                        <div style="color: #666; font-size: 10px; margin-top: 2px;">
+                                            ${trade.symbol.split('-')[0]}
+                                        </div>
+                                    </div>
+                                </td>
+                                <td style="font-size: 12px;">
+                                    <div>开仓: <span class="profit-negative">-$${trade.fees.open.toFixed(2)}</span></div>
+                                    <div>平仓: <span class="profit-negative">-$${trade.fees.close.toFixed(2)}</span></div>
+                                    <div style="color: #888;">总计: <span class="profit-negative">-$${trade.fees.total.toFixed(2)}</span></div>
+                                </td>
+                                <td style="font-size: 12px; text-align: center;">
+                                    <div style="margin-bottom: 4px;">
+                                        <span class="${trade.funding_rate >= 0 ? 'profit-positive' : 'profit-negative'}">
+                                            ${(trade.funding_rate * 100).toFixed(3)}%
+                                        </span>
+                                    </div>
+                                    <div style="color: #888; font-size: 10px;">
+                                        ${trade.funding_expire_time}
+                                    </div>
+                                </td>
+                                <td style="text-align: center;">
+                                    <div class="${trade.current_pnl >= 0 ? 'profit-positive' : 'profit-negative'}" style="font-size: 13px; font-weight: bold;">
+                                        ${trade.current_pnl >= 0 ? '+' : ''}$${trade.current_pnl.toFixed(2)}
+                                    </div>
+                                </td>
+                                <td style="font-size: 12px;">
+                                    <div>创建: ${new Date(trade.created_at).toLocaleDateString()}</div>
+                                    <div style="color: #888; font-size: 10px;">
+                                        ${new Date(trade.created_at).toLocaleTimeString()}
+                                    </div>
+                                </td>
+                                <td>
+                                    ${renderTradeActionButtons(trade)}
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+            
+            content.innerHTML = table;
+        }
+
+        function generateMockOrderRecords() {
+            const symbols = ['BTC-USDT', 'ETH-USDT', 'ADA-USDT'];
+            const exchanges = ['binance', 'okx', 'bybit'];
+            const statuses = ['active', 'closed', 'pending_close'];
+            const orderStatuses = ['filled', 'partial', 'pending', 'cancelled'];
+            
+            const arbitrageTrades = [];
+            
+            for (let i = 0; i < 5; i++) {
+                const symbol = symbols[Math.floor(Math.random() * symbols.length)];
+                const longExchange = exchanges[Math.floor(Math.random() * exchanges.length)];
+                let shortExchange = exchanges[Math.floor(Math.random() * exchanges.length)];
+                while (shortExchange === longExchange) {
+                    shortExchange = exchanges[Math.floor(Math.random() * exchanges.length)];
+                }
+                
+                const pairStatus = statuses[Math.floor(Math.random() * statuses.length)];
+                const basePrice = 40000 + Math.random() * 20000;
+                const totalAmount = 1000 + Math.random() * 3000;
+                const spreadPercent = 0.05 + Math.random() * 0.25;
+                
+                // Long position (买入)
+                const longPrice = basePrice;
+                const shortPrice = basePrice * (1 + spreadPercent / 100);
+                
+                // 每个交易的金额（总金额分为两部分）
+                const longAmount = totalAmount / 2;
+                const shortAmount = totalAmount / 2;
+                
+                // 计算个别交易的手续费
+                const longOpenFee = longAmount * 0.0002; // 0.02%
+                const longCloseFee = longAmount * 0.0002;
+                const shortOpenFee = shortAmount * 0.0002;
+                const shortCloseFee = shortAmount * 0.0002;
+                
+                // 计算资金费率预估（8小时一次）
+                const fundingRateLong = (Math.random() - 0.5) * 0.002; // -0.1% to +0.1%
+                const fundingRateShort = (Math.random() - 0.5) * 0.002;
+                
+                // 计算资金费率到期时间
+                const now = new Date();
+                const expireHours = Math.ceil((now.getHours() + 1) / 8) * 8;
+                const expireTime = new Date(now);
+                expireTime.setHours(expireHours === 24 ? 0 : expireHours, 0, 0, 0);
+                if (expireTime <= now) {
+                    expireTime.setDate(expireTime.getDate() + 1);
+                }
+                
+                const timeLeft = Math.floor((expireTime - now) / (1000 * 60));
+                const expireText = timeLeft > 60 ? 
+                    `${Math.floor(timeLeft / 60)}h${timeLeft % 60}m` : 
+                    `${timeLeft}m`;
+                
+                // 创建时间和预计关闭时间
+                const createdAt = new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000);
+                const estimatedCloseTime = new Date(createdAt.getTime() + (8 + Math.random() * 16) * 60 * 60 * 1000);
+                
+                // 计算数量
+                const longQuantity = longAmount / longPrice;
+                const shortQuantity = shortAmount / shortPrice;
+                
+                // 计算各自的盈亏
+                const longCurrentPnl = pairStatus === 'closed' ? 
+                    (Math.random() * 20 - 10) : 
+                    (Math.random() * 10 - 5);
+                const shortCurrentPnl = pairStatus === 'closed' ? 
+                    (Math.random() * 20 - 10) : 
+                    (Math.random() * 10 - 5);
+                
+                // 生成每个交易的状态
+                const longOrderStatus = pairStatus === 'active' ? 
+                    (Math.random() > 0.8 ? 'partial' : 'filled') : 
+                    (pairStatus === 'closed' ? 'filled' : orderStatuses[Math.floor(Math.random() * orderStatuses.length)]);
+                
+                const shortOrderStatus = pairStatus === 'active' ? 
+                    (Math.random() > 0.8 ? 'partial' : 'filled') : 
+                    (pairStatus === 'closed' ? 'filled' : orderStatuses[Math.floor(Math.random() * orderStatuses.length)]);
+                
+                const arbitrageId = `ARB-${String(i + 1).padStart(3, '0')}`;
+                
+                // 生成多头交易记录
+                arbitrageTrades.push({
+                    arbitrage_id: arbitrageId,
+                    trade_id: `${arbitrageId}-LONG`,
+                    symbol: symbol,
+                    trade_type: 'LONG',
+                    exchange: longExchange,
+                    order_status: longOrderStatus,
+                    pair_status: pairStatus,
+                    amount: longAmount,
+                    price: longPrice,
+                    quantity: longQuantity,
+                    current_quantity: longOrderStatus === 'filled' ? longQuantity : longQuantity * (0.6 + Math.random() * 0.4),
+                    fees: {
+                        open: longOpenFee,
+                        close: longCloseFee,
+                        total: longOpenFee + longCloseFee
+                    },
+                    funding_rate: fundingRateLong,
+                    funding_expire_time: expireText,
+                    current_pnl: longCurrentPnl,
+                    created_at: createdAt.toISOString(),
+                    estimated_close_time: estimatedCloseTime.toISOString()
+                });
+                
+                // 生成空头交易记录
+                arbitrageTrades.push({
+                    arbitrage_id: arbitrageId,
+                    trade_id: `${arbitrageId}-SHORT`,
+                    symbol: symbol,
+                    trade_type: 'SHORT',
+                    exchange: shortExchange,
+                    order_status: shortOrderStatus,
+                    pair_status: pairStatus,
+                    amount: shortAmount,
+                    price: shortPrice,
+                    quantity: shortQuantity,
+                    current_quantity: shortOrderStatus === 'filled' ? shortQuantity : shortQuantity * (0.6 + Math.random() * 0.4),
+                    fees: {
+                        open: shortOpenFee,
+                        close: shortCloseFee,
+                        total: shortOpenFee + shortCloseFee
+                    },
+                    funding_rate: fundingRateShort,
+                    funding_expire_time: expireText,
+                    current_pnl: shortCurrentPnl,
+                    created_at: createdAt.toISOString(),
+                    estimated_close_time: estimatedCloseTime.toISOString()
+                });
+            }
+            
+            return arbitrageTrades.sort((a, b) => {
+                // 首先按套利ID排序，然后按交易类型排序（LONG在前）
+                if (a.arbitrage_id !== b.arbitrage_id) {
+                    return b.arbitrage_id.localeCompare(a.arbitrage_id);
+                }
+                return a.trade_type === 'LONG' ? -1 : 1;
+            });
+        }
+
+        // Rules Settings functions
+        function loadRulesSettings() {
+            const content = document.getElementById('rulesContent');
+            
+            // Get current rules from localStorage
+            const currentRules = JSON.parse(localStorage.getItem('arbitrageRules')) || [];
+            const activeRulesCount = currentRules.length;
+            const successRate = activeRulesCount > 0 ? (85 + Math.random() * 10).toFixed(1) : '0';
+            
+            content.innerHTML = `
+                <div class="controls-panel">
+                    <h3 style="margin-bottom: 15px; color: #fff;">策略规则管理</h3>
+                    <p style="color: #ccc; margin-bottom: 20px;">管理和配置套利策略的参数和风险控制规则</p>
+                    
+                    <!-- Statistics Panel -->
+                    <div style="background: #333; padding: 15px; border-radius: 8px; margin-bottom: 25px;">
+                        <h4 style="color: #fff; margin-bottom: 10px;">规则统计</h4>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
+                            <div style="text-align: center;">
+                                <div style="font-size: 1.5em; color: #4ade80; font-weight: bold;">${activeRulesCount}</div>
+                                <div style="color: #888; font-size: 0.9em;">已保存规则</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="font-size: 1.5em; color: #3b82f6; font-weight: bold;">${currentRules.filter(r => r.config.bidirectional).length}</div>
+                                <div style="color: #888; font-size: 0.9em;">双向规则</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="font-size: 1.5em; color: #f59e0b; font-weight: bold;">${successRate}%</div>
+                                <div style="color: #888; font-size: 0.9em;">平均成功率</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Rules List -->
+                    <div style="background: #2a2a2a; border-radius: 8px; padding: 20px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <h4 style="color: #fff; margin: 0;">已保存规则</h4>
+                            <button class="btn btn-primary" onclick="createNewRule()">
+                                ✚ 新建规则
+                            </button>
+                        </div>
+                        
+                        <div id="rulesListContainer">
+                            ${currentRules.length === 0 ? 
+                                `<div style="text-align: center; color: #888; padding: 40px;">
+                                    <div style="font-size: 48px; margin-bottom: 15px;">📋</div>
+                                    <div style="font-size: 16px; margin-bottom: 8px;">暂无保存的规则</div>
+                                    <div style="font-size: 12px; color: #666;">点击上方"新建规则"按钮开始创建</div>
+                                </div>` :
+                                generateRulesTable(currentRules)
+                            }
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function generateRulesTable(rules) {
+            return `
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="background: rgba(59, 130, 246, 0.1); border-bottom: 2px solid #3b82f6;">
+                                <th style="padding: 12px; text-align: left; color: #60a5fa; font-weight: bold;">规则名称</th>
+                                <th style="padding: 12px; text-align: center; color: #60a5fa; font-weight: bold;">交易对</th>
+                                <th style="padding: 12px; text-align: center; color: #60a5fa; font-weight: bold;">交易所配对</th>
+                                <th style="padding: 12px; text-align: center; color: #60a5fa; font-weight: bold;">金额范围</th>
+                                <th style="padding: 12px; text-align: center; color: #60a5fa; font-weight: bold;">止盈/止损</th>
+                                <th style="padding: 12px; text-align: center; color: #60a5fa; font-weight: bold;">创建时间</th>
+                                <th style="padding: 12px; text-align: center; color: #60a5fa; font-weight: bold;">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rules.map(rule => generateRuleRow(rule)).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function generateRuleRow(rule) {
+            const config = rule.config;
+            const createdDate = new Date(rule.createdAt).toLocaleDateString();
+            const updatedDate = new Date(rule.updatedAt).toLocaleDateString();
+            const isUpdated = createdDate !== updatedDate;
+            
+            return `
+                <tr style="border-bottom: 1px solid #374151; transition: background-color 0.2s ease;" 
+                    onmouseover="this.style.backgroundColor='rgba(55, 65, 81, 0.3)'" 
+                    onmouseout="this.style.backgroundColor='transparent'">
+                    <td style="padding: 15px; vertical-align: top;">
+                        <div style="font-weight: bold; color: #fff; margin-bottom: 4px;">${rule.name}</div>
+                        <div style="font-size: 11px; color: #9ca3af;">
+                            创建：${createdDate}${isUpdated ? ` | 更新：${updatedDate}` : ''}
+                        </div>
+                        ${config.bidirectional ? '<span style="background: #065f46; color: #10b981; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-top: 4px; display: inline-block;">双向</span>' : ''}
+                    </td>
+                    <td style="padding: 15px; text-align: center; vertical-align: top;">
+                        <div style="font-weight: bold; color: #fbbf24;">${config.long.contract}</div>
+                        <div style="font-size: 11px; color: #888; margin-top: 2px;">永续合约</div>
+                    </td>
+                    <td style="padding: 15px; text-align: center; vertical-align: top;">
+                        <div style="margin-bottom: 4px;">
+                            <span style="color: #10b981;">Buy:</span> 
+                            <span class="exchange-badge exchange-${config.long.exchange}">${config.long.exchange.toUpperCase()}</span>
+                        </div>
+                        <div>
+                            <span style="color: #ef4444;">Sell:</span> 
+                            <span class="exchange-badge exchange-${config.short.exchange}">${config.short.exchange.toUpperCase()}</span>
+                        </div>
+                    </td>
+                    <td style="padding: 15px; text-align: center; vertical-align: top;">
+                        <div style="font-weight: bold; color: #fff;">${config.global.minOrderAmount} - ${config.global.maxOrderAmount}</div>
+                        <div style="font-size: 11px; color: #888; margin-top: 2px;">USDT</div>
+                    </td>
+                    <td style="padding: 15px; text-align: center; vertical-align: top;">
+                        <div style="color: #10b981; margin-bottom: 2px;">止盈: +${config.closeManagement.takeProfitPercent}%</div>
+                        <div style="color: #ef4444;">止损: ${config.closeManagement.stopLossPercent}%</div>
+                        <div style="font-size: 10px; color: #888; margin-top: 2px;">比例: ${config.closeManagement.profitLossRatio}</div>
+                    </td>
+                    <td style="padding: 15px; text-align: center; vertical-align: top;">
+                        <div style="font-size: 11px; color: #ccc;">${createdDate}</div>
+                    </td>
+                    <td style="padding: 15px; text-align: center; vertical-align: top;">
+                        <div style="display: flex; flex-direction: column; gap: 6px; align-items: center;">
+                            <button class="btn btn-primary" onclick="editRule('${rule.id}')" 
+                                    style="font-size: 11px; padding: 4px 12px; min-width: 60px;">编辑</button>
+                            <button class="btn btn-secondary" onclick="viewRuleDetails('${rule.id}')" 
+                                    style="font-size: 11px; padding: 4px 12px; min-width: 60px;">详情</button>
+                            <button class="btn btn-danger" onclick="deleteRuleFromSettings('${rule.id}')" 
+                                    style="font-size: 11px; padding: 4px 12px; min-width: 60px;">删除</button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }
+
+        // Modal functions
+        function openTradeModal(oppJson) {
+            const opp = JSON.parse(decodeURIComponent(oppJson));
+            
+            const modalBody = document.getElementById('modalBody');
+            modalBody.innerHTML = `
+                <div style="margin-bottom: 20px;">
+                    <h4>${opp.symbol} 套利交易</h4>
+                    <p><strong>策略:</strong> 在${opp.buy_exchange.toUpperCase()}买入 $${opp.buy_price.toFixed(2)}, 
+                       在${opp.sell_exchange.toUpperCase()}卖出 $${opp.sell_price.toFixed(2)}</p>
+                    <p><strong>预期收益:</strong> <span class="profit-positive">${opp.estimated_profit.toFixed(3)}%</span></p>
+                </div>
+                
+                <div class="trade-form-section">
+                    <h5>交易金额</h5>
+                    <div class="control-group">
+                        <label for="tradeAmount">金额 (USD)</label>
+                        <input type="number" id="tradeAmount" value="1000" min="100" step="100">
+                    </div>
+                </div>
+                
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button class="btn btn-success" onclick="executeTrade('${encodeURIComponent(JSON.stringify(opp))}')">
+                        执行交易
+                    </button>
+                    <button class="btn btn-secondary" onclick="closeTradeModal()">
+                        取消
+                    </button>
+                </div>
+            `;
+            
+            document.getElementById('tradeModal').style.display = 'block';
+        }
+
+        function closeTradeModal() {
+            document.getElementById('tradeModal').style.display = 'none';
+        }
+
+        function executeTrade(oppJson) {
+            const opp = JSON.parse(decodeURIComponent(oppJson));
+            const amount = parseFloat(document.getElementById('tradeAmount').value);
+            
+            if (!amount || amount < 100) {
+                alert('请输入有效的交易金额 (最小 $100)');
+                return;
+            }
+            
+            // Simulate trade execution
+            alert(`交易执行成功！\n交易对: ${opp.symbol}\n金额: $${amount.toLocaleString()}\n预期收益: ${opp.estimated_profit.toFixed(3)}%`);
+            closeTradeModal();
+            
+            // Refresh data
+            updateDashboardMetrics();
+            if (document.getElementById('market-monitoring').classList.contains('active')) {
+                scanOpportunities();
+            }
+        }
+
+        // Rules Modal functions
+        function createNewRule() {
+            document.getElementById('rulesModal').style.display = 'block';
+            // Initialize rules list when modal opens
+            renderRulesList();
+        }
+
+        function closeRulesModal() {
+            document.getElementById('rulesModal').style.display = 'none';
+        }
+
+        function saveRuleConfiguration() {
+            // Get rule name
+            const ruleName = document.getElementById('ruleName').value.trim();
+            if (!ruleName) {
+                alert('请输入规则名称！');
+                return;
+            }
+
+            // Check if rule name already exists
+            const existingRule = savedRules.find(rule => rule.name === ruleName);
+            if (existingRule) {
+                if (!confirm(`规则 "${ruleName}" 已存在，是否覆盖？`)) {
+                    return;
+                }
+            }
+
+            // Collect form data
+            const ruleConfig = {
+                bidirectional: document.getElementById('bidirectionalCreate').checked,
+                long: {
+                    contract: document.getElementById('longContract').value,
+                    exchange: document.getElementById('longExchange').value,
+                    leverage: document.getElementById('longLeverage').value,
+                    openFee: document.getElementById('longOpenFee').value,
+                    closeFee: document.getElementById('longCloseFee').value
+                },
+                short: {
+                    contract: document.getElementById('shortContract').value,
+                    exchange: document.getElementById('shortExchange').value,
+                    leverage: document.getElementById('shortLeverage').value,
+                    openFee: document.getElementById('shortOpenFee').value,
+                    closeFee: document.getElementById('shortCloseFee').value
+                },
+                global: {
+                    fundingPeriod: document.getElementById('fundingSettlementPeriod').value,
+                    minOrderAmount: parseFloat(document.getElementById('minOrderAmount').value) || 100,
+                    maxOrderAmount: parseFloat(document.getElementById('maxOrderAmount').value) || 10000
+                },
+                closeManagement: {
+                    // 盈亏控制指标
+                    takeProfitPercent: parseFloat(document.getElementById('takeProfitPercent').value) || 2.5,
+                    stopLossPercent: parseFloat(document.getElementById('stopLossPercent').value) || -1.0,
+                    maxLossAmount: parseFloat(document.getElementById('maxLossAmount').value) || 500,
+                    profitLossRatio: document.getElementById('profitLossRatio').value || '2:1',
+                    // 时间管理指标
+                    maxHoldingTime: parseFloat(document.getElementById('maxHoldingTime').value) || 48,
+                    fundingCloseBuffer: parseFloat(document.getElementById('fundingCloseBuffer').value) || 45,
+                    forcedCloseTime: document.getElementById('forcedCloseTime').value || '',
+                    closeTimeOffset: parseFloat(document.getElementById('closeTimeOffset').value) || 0
+                }
+            };
+            
+            // Validate order amounts
+            if (ruleConfig.global.minOrderAmount >= ruleConfig.global.maxOrderAmount) {
+                alert('最小下单金额必须小于最大下单金额！');
+                return;
+            }
+            
+            if (ruleConfig.global.minOrderAmount < 10) {
+                alert('最小下单金额不能小于 10 USDT！');
+                return;
+            }
+
+            // Validate close management settings
+            if (ruleConfig.closeManagement.takeProfitPercent <= 0) {
+                alert('止盈百分比必须大于 0！');
+                return;
+            }
+
+            if (ruleConfig.closeManagement.stopLossPercent >= 0) {
+                alert('止损百分比必须小于 0！');
+                return;
+            }
+
+            if (Math.abs(ruleConfig.closeManagement.stopLossPercent) >= ruleConfig.closeManagement.takeProfitPercent) {
+                alert('止盈百分比应大于止损百分比的绝对值，确保合理的盈亏比！');
+                return;
+            }
+
+            if (ruleConfig.closeManagement.maxHoldingTime < 1) {
+                alert('最大持仓时间必须至少 1 小时！');
+                return;
+            }
+
+            if (ruleConfig.closeManagement.fundingCloseBuffer < 5) {
+                alert('资金费结算前平仓时间必须至少 5 分钟！');
+                return;
+            }
+            
+            // Create rule object
+            const ruleObject = {
+                id: existingRule ? existingRule.id : Date.now().toString(),
+                name: ruleName,
+                config: ruleConfig,
+                createdAt: existingRule ? existingRule.createdAt : new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            };
+
+            // Update or add rule
+            if (existingRule) {
+                const index = savedRules.findIndex(rule => rule.name === ruleName);
+                savedRules[index] = ruleObject;
+            } else {
+                savedRules.push(ruleObject);
+            }
+
+            // Save to localStorage
+            localStorage.setItem('arbitrageRules', JSON.stringify(savedRules));
+            
+            console.log('Saving rule configuration:', ruleObject);
+            
+            const confirmMessage = `规则 "${ruleName}" 已保存！\n\n` +
+                `💰 下单金额：${ruleConfig.global.minOrderAmount} - ${ruleConfig.global.maxOrderAmount} USDT\n` +
+                `📈 止盈设置：+${ruleConfig.closeManagement.takeProfitPercent}%\n` +
+                `📉 止损设置：${ruleConfig.closeManagement.stopLossPercent}% / $${ruleConfig.closeManagement.maxLossAmount}\n` +
+                `⏰ 时间控制：最大持仓 ${ruleConfig.closeManagement.maxHoldingTime}h\n` +
+                `💎 盈亏比要求：${ruleConfig.closeManagement.profitLossRatio}`;
+            
+            alert(confirmMessage);
+            
+            // Update rules list display
+            renderRulesList();
+            
+            // Refresh rules settings page if currently viewing it
+            const currentTab = document.querySelector('.tab-content[style*="block"]');
+            if (currentTab && currentTab.id === 'rules-settings') {
+                setTimeout(() => refreshRulesSettings(), 300);
+            }
+            
+            // Clear rule name input
+            document.getElementById('ruleName').value = '';
+            
+            closeRulesModal();
+        }
+
+        function useTemplateData() {
+            // Clear rule name first
+            document.getElementById('ruleName').value = '';
+            
+            // Fill form with template data
+            document.getElementById('longContract').value = 'BTCUSDT-PERP';
+            document.getElementById('longExchange').value = 'binance';
+            document.getElementById('shortContract').value = 'BTCUSDT-PERP';
+            document.getElementById('shortExchange').value = 'okx';
+            document.getElementById('fundingSettlementPeriod').value = '8h';
+            
+            // Set default order amounts
+            document.getElementById('minOrderAmount').value = '500';
+            document.getElementById('maxOrderAmount').value = '5000';
+            
+            // Set close management defaults
+            document.getElementById('takeProfitPercent').value = '2.0';
+            document.getElementById('stopLossPercent').value = '-1.0';
+            document.getElementById('maxLossAmount').value = '300';
+            document.getElementById('profitLossRatio').value = '2:1';
+            document.getElementById('maxHoldingTime').value = '24';
+            document.getElementById('fundingCloseBuffer').value = '30';
+            document.getElementById('forcedCloseTime').value = '02:00';
+            document.getElementById('closeTimeOffset').value = '0';
+            
+            // Update validation display
+            validateCloseManagementRules();
+            
+            alert(`模板数据已填充！\n\n包含推荐配置：\n\n💰 金额范围：500 - 5000 USDT\n📈 止盈：+2.0%\n📉 止损：-1.0% / $300\n⏰ 最大持仓：24小时\n🕐 强制平仓：凌晨02:00\n\n💡 请输入规则名称后保存`);
+        }
+
+        // Close Management Validation Helper
+        function validateCloseManagementRules() {
+            const takeProfit = parseFloat(document.getElementById('takeProfitPercent').value) || 0;
+            const stopLoss = parseFloat(document.getElementById('stopLossPercent').value) || 0;
+            
+            // Update visual feedback based on profit/loss ratio
+            const ratio = Math.abs(stopLoss) > 0 ? (takeProfit / Math.abs(stopLoss)).toFixed(1) : 0;
+            const ratioDisplay = document.getElementById('currentProfitLossRatio');
+            
+            if (ratioDisplay) {
+                if (ratio >= 2) {
+                    ratioDisplay.innerHTML = `<span style="color: #10b981;">当前比例: ${ratio}:1 ✓</span>`;
+                } else if (ratio >= 1) {
+                    ratioDisplay.innerHTML = `<span style="color: #f59e0b;">当前比例: ${ratio}:1 ⚠️</span>`;
+                } else {
+                    ratioDisplay.innerHTML = `<span style="color: #ef4444;">当前比例: ${ratio}:1 ❌</span>`;
+                }
+            }
+        }
+
+        // Setup real-time validation for close management
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                const takeProfitInput = document.getElementById('takeProfitPercent');
+                const stopLossInput = document.getElementById('stopLossPercent');
+                
+                if (takeProfitInput) {
+                    takeProfitInput.addEventListener('input', validateCloseManagementRules);
+                }
+                if (stopLossInput) {
+                    stopLossInput.addEventListener('input', validateCloseManagementRules);
+                }
+
+                // Initialize rules list on load
+                renderRulesList();
+            }, 1000);
+        });
+
+        // Rules List Management Functions
+        function toggleRulesList() {
+            const rulesList = document.getElementById('savedRulesList');
+            const toggleBtn = document.getElementById('toggleRulesBtn');
+            
+            if (rulesList.style.display === 'none') {
+                rulesList.style.display = 'block';
+                toggleBtn.textContent = '隐藏列表';
+                renderRulesList();
+            } else {
+                rulesList.style.display = 'none';
+                toggleBtn.textContent = '显示列表';
+            }
+        }
+
+        function renderRulesList() {
+            const listContent = document.getElementById('rulesListContent');
+            
+                         if (savedRules.length === 0) {
+                 listContent.innerHTML = `
+                     <div style="text-align: center; color: #888; font-size: 12px; padding: 20px;">
+                         暂无保存的规则<br>
+                         <small style="color: #666; margin-top: 8px; display: block;">填写配置并输入规则名称后点击"保存规则"来创建</small>
+                     </div>
+                 `;
+                 return;
+             }
+
+                         const rulesHTML = savedRules.map(rule => {
+                 const config = rule.config;
+                 const createdDate = new Date(rule.createdAt).toLocaleDateString();
+                 const updatedDate = new Date(rule.updatedAt).toLocaleDateString();
+                 
+                 return `
+                     <div class="rule-item" onclick="viewRuleDetails('${rule.id}')">
+                         <div class="rule-item-header">
+                             <div style="flex: 1;">
+                                 <div class="rule-name">${rule.name}</div>
+                                 <div class="rule-meta">
+                                     创建：${createdDate} ${createdDate !== updatedDate ? `| 更新：${updatedDate}` : ''}
+                                 </div>
+                             </div>
+                             <div class="rule-actions" onclick="event.stopPropagation();">
+                                 <button class="btn btn-secondary" onclick="loadRule('${rule.id}')" 
+                                         style="font-size: 11px; padding: 4px 8px;">加载</button>
+                                 <button class="btn btn-danger" onclick="deleteRule('${rule.id}')" 
+                                         style="font-size: 11px; padding: 4px 8px;">删除</button>
+                             </div>
+                         </div>
+                         <div class="rule-summary">
+                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                                 <div>💰 金额: ${config.global.minOrderAmount}-${config.global.maxOrderAmount}</div>
+                                 <div>📈 止盈: +${config.closeManagement.takeProfitPercent}%</div>
+                                 <div>📉 止损: ${config.closeManagement.stopLossPercent}%</div>
+                                 <div>⏰ 持仓: ${config.closeManagement.maxHoldingTime}h</div>
+                             </div>
+                         </div>
+                     </div>
+                 `;
+             }).join('');
+
+            listContent.innerHTML = rulesHTML;
+        }
+
+        function loadRule(ruleId) {
+            const rule = savedRules.find(r => r.id === ruleId);
+            if (!rule) {
+                alert('规则未找到！');
+                return;
+            }
+
+            const config = rule.config;
+            
+            // Fill form with rule data
+            document.getElementById('ruleName').value = rule.name;
+            document.getElementById('bidirectionalCreate').checked = config.bidirectional;
+            
+            // Long position
+            document.getElementById('longContract').value = config.long.contract;
+            document.getElementById('longExchange').value = config.long.exchange;
+            document.getElementById('longLeverage').value = config.long.leverage;
+            document.getElementById('longOpenFee').value = config.long.openFee;
+            document.getElementById('longCloseFee').value = config.long.closeFee;
+            
+            // Short position
+            document.getElementById('shortContract').value = config.short.contract;
+            document.getElementById('shortExchange').value = config.short.exchange;
+            document.getElementById('shortLeverage').value = config.short.leverage;
+            document.getElementById('shortOpenFee').value = config.short.openFee;
+            document.getElementById('shortCloseFee').value = config.short.closeFee;
+            
+            // Global settings
+            document.getElementById('fundingSettlementPeriod').value = config.global.fundingPeriod;
+            document.getElementById('minOrderAmount').value = config.global.minOrderAmount;
+            document.getElementById('maxOrderAmount').value = config.global.maxOrderAmount;
+            
+            // Close management settings
+            document.getElementById('takeProfitPercent').value = config.closeManagement.takeProfitPercent;
+            document.getElementById('stopLossPercent').value = config.closeManagement.stopLossPercent;
+            document.getElementById('maxLossAmount').value = config.closeManagement.maxLossAmount;
+            document.getElementById('profitLossRatio').value = config.closeManagement.profitLossRatio;
+            document.getElementById('maxHoldingTime').value = config.closeManagement.maxHoldingTime;
+            document.getElementById('fundingCloseBuffer').value = config.closeManagement.fundingCloseBuffer;
+            document.getElementById('forcedCloseTime').value = config.closeManagement.forcedCloseTime;
+            document.getElementById('closeTimeOffset').value = config.closeManagement.closeTimeOffset;
+            
+            // Update validation display
+            validateCloseManagementRules();
+            
+            alert(`规则 "${rule.name}" 已加载到表单中！`);
+        }
+
+        function deleteRule(ruleId) {
+            const rule = savedRules.find(r => r.id === ruleId);
+            if (!rule) {
+                alert('规则未找到！');
+                return;
+            }
+
+            if (!confirm(`确定要删除规则 "${rule.name}" 吗？此操作不可撤销。`)) {
+                return;
+            }
+
+                         // Remove rule from array
+             savedRules = savedRules.filter(r => r.id !== ruleId);
+             
+             // Update localStorage
+             localStorage.setItem('arbitrageRules', JSON.stringify(savedRules));
+             
+             // Re-render list
+             renderRulesList();
+             
+             // Refresh rules settings page if currently viewing it
+             const currentTab = document.querySelector('.tab-content[style*="block"]');
+             if (currentTab && currentTab.id === 'rules-settings') {
+                 setTimeout(() => refreshRulesSettings(), 100);
+             }
+             
+             alert(`规则 "${rule.name}" 已删除！`);
+         }
+
+         function viewRuleDetails(ruleId) {
+             const rule = savedRules.find(r => r.id === ruleId);
+             if (!rule) {
+                 alert('规则未找到！');
+                 return;
+             }
+
+             const config = rule.config;
+             const createdDate = new Date(rule.createdAt).toLocaleString();
+             const updatedDate = new Date(rule.updatedAt).toLocaleString();
+
+             // Set modal title
+             document.getElementById('ruleDetailsTitle').textContent = `规则详情 - ${rule.name}`;
+             
+             // Set load button action
+             document.getElementById('loadRuleFromDetails').onclick = () => {
+                 closeRuleDetailsModal();
+                 loadRule(ruleId);
+             };
+
+             // Generate details content
+             const detailsHTML = `
+                 <div style="padding: 15px;">
+                     <!-- Basic Info -->
+                     <div style="background: rgba(31, 41, 55, 0.6); border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+                         <h6 style="color: #60a5fa; margin-bottom: 10px;">基本信息</h6>
+                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 12px;">
+                             <div><strong>规则名称：</strong> ${rule.name}</div>
+                             <div><strong>双向创建：</strong> ${config.bidirectional ? '是' : '否'}</div>
+                             <div><strong>创建时间：</strong> ${createdDate}</div>
+                             <div><strong>更新时间：</strong> ${updatedDate}</div>
+                         </div>
+                     </div>
+
+                     <!-- Position Configuration -->
+                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                         <!-- Long Position -->
+                         <div style="background: rgba(16, 185, 129, 0.05); border: 1px solid #10b981; border-radius: 8px; padding: 15px;">
+                             <h6 style="color: #10b981; margin-bottom: 10px;">做多配置</h6>
+                             <div style="font-size: 12px; line-height: 1.6;">
+                                 <div><strong>合约：</strong> ${config.long.contract}</div>
+                                 <div><strong>交易所：</strong> ${config.long.exchange}</div>
+                                 <div><strong>杠杆：</strong> ${config.long.leverage}x</div>
+                                 <div><strong>开仓手续费：</strong> ${config.long.openFee}%</div>
+                                 <div><strong>平仓手续费：</strong> ${config.long.closeFee}%</div>
+                             </div>
+                         </div>
+
+                         <!-- Short Position -->
+                         <div style="background: rgba(239, 68, 68, 0.05); border: 1px solid #ef4444; border-radius: 8px; padding: 15px;">
+                             <h6 style="color: #ef4444; margin-bottom: 10px;">做空配置</h6>
+                             <div style="font-size: 12px; line-height: 1.6;">
+                                 <div><strong>合约：</strong> ${config.short.contract}</div>
+                                 <div><strong>交易所：</strong> ${config.short.exchange}</div>
+                                 <div><strong>杠杆：</strong> ${config.short.leverage}x</div>
+                                 <div><strong>开仓手续费：</strong> ${config.short.openFee}%</div>
+                                 <div><strong>平仓手续费：</strong> ${config.short.closeFee}%</div>
+                             </div>
+                         </div>
+                     </div>
+
+                     <!-- Global Settings -->
+                     <div style="background: rgba(59, 130, 246, 0.05); border: 1px solid #3b82f6; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+                         <h6 style="color: #60a5fa; margin-bottom: 10px;">全局设置</h6>
+                         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; font-size: 12px;">
+                             <div><strong>资金费周期：</strong> ${config.global.fundingPeriod || '不限制'}</div>
+                             <div><strong>最小金额：</strong> ${config.global.minOrderAmount} USDT</div>
+                             <div><strong>最大金额：</strong> ${config.global.maxOrderAmount} USDT</div>
+                         </div>
+                     </div>
+
+                     <!-- Close Management -->
+                     <div style="background: rgba(245, 158, 11, 0.05); border: 1px solid #f59e0b; border-radius: 8px; padding: 15px;">
+                         <h6 style="color: #f59e0b; margin-bottom: 15px;">平仓管理配置</h6>
+                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                             <!-- 盈亏控制 -->
+                             <div>
+                                 <div style="color: #10b981; font-weight: bold; margin-bottom: 8px; font-size: 13px;">盈亏控制</div>
+                                 <div style="font-size: 12px; line-height: 1.6;">
+                                     <div><strong>止盈：</strong> +${config.closeManagement.takeProfitPercent}%</div>
+                                     <div><strong>止损：</strong> ${config.closeManagement.stopLossPercent}%</div>
+                                     <div><strong>最大浮亏：</strong> $${config.closeManagement.maxLossAmount}</div>
+                                     <div><strong>盈亏比：</strong> ${config.closeManagement.profitLossRatio}</div>
+                                 </div>
+                             </div>
+                             <!-- 时间管理 -->
+                             <div>
+                                 <div style="color: #60a5fa; font-weight: bold; margin-bottom: 8px; font-size: 13px;">时间管理</div>
+                                 <div style="font-size: 12px; line-height: 1.6;">
+                                     <div><strong>最大持仓：</strong> ${config.closeManagement.maxHoldingTime}小时</div>
+                                     <div><strong>结算前平仓：</strong> ${config.closeManagement.fundingCloseBuffer}分钟</div>
+                                     <div><strong>强制平仓时间：</strong> ${config.closeManagement.forcedCloseTime || '不设置'}</div>
+                                     <div><strong>时间偏移：</strong> ${config.closeManagement.closeTimeOffset}分钟</div>
+                                 </div>
+                             </div>
+                         </div>
+                     </div>
+                 </div>
+             `;
+
+             document.getElementById('ruleDetailsContent').innerHTML = detailsHTML;
+             document.getElementById('ruleDetailsModal').style.display = 'block';
+         }
+
+         function closeRuleDetailsModal() {
+             document.getElementById('ruleDetailsModal').style.display = 'none';
+         }
+
+         function editRule(ruleId) {
+             // Load the rule and open rules modal for editing
+             loadRule(ruleId);
+             createNewRule(); // Open the modal
+         }
+
+         function deleteRuleFromSettings(ruleId) {
+             const rule = savedRules.find(r => r.id === ruleId);
+             if (!rule) {
+                 alert('规则未找到！');
+                 return;
+             }
+
+             if (!confirm(`确定要删除规则 "${rule.name}" 吗？\n\n此操作不可撤销，建议先导出备份。`)) {
+                 return;
+             }
+
+             // Remove rule from array
+             savedRules = savedRules.filter(r => r.id !== ruleId);
+             
+             // Update localStorage
+             localStorage.setItem('arbitrageRules', JSON.stringify(savedRules));
+             
+             // Refresh the rules settings page
+             loadRulesSettings();
+             
+             alert(`规则 "${rule.name}" 已删除！`);
+         }
+
+         function refreshRulesSettings() {
+             // Refresh the rules settings page to reflect any changes
+             loadRulesSettings();
+         }
+
+        // Utility functions (保持现有功能)
+        function enableAutoTrading() {
+            autoTradingEnabled = !autoTradingEnabled;
+            const btn = document.getElementById('autoTradingBtn');
+            
+            if (autoTradingEnabled) {
+                btn.textContent = '停止自动交易';
+                btn.className = 'btn btn-danger';
+                alert('自动交易已启用！系统将自动执行符合条件的套利交易。');
+            } else {
+                btn.textContent = '启动自动交易';
+                btn.className = 'btn btn-success';
+                alert('自动交易已停用。');
+            }
+        }
+
+        function emergencyStop() {
+            if (confirm('确定要紧急停止所有交易活动吗？')) {
+                autoTradingEnabled = false;
+                document.getElementById('autoTradingBtn').textContent = '启动自动交易';
+                document.getElementById('autoTradingBtn').className = 'btn btn-success';
+                alert('紧急停止已激活！所有交易活动已暂停。');
+                updateDashboardMetrics();
+            }
+        }
+
+        function saveFilters() {
+            alert('筛选条件已保存！');
+        }
+
+        function refreshOrderRecords() {
+            loadOrderRecords();
+        }
+
+        function exportOrderRecords() {
+            alert('订单数据导出功能将在下个版本中实现。');
+        }
+
+        function useTemplate() {
+            createNewRule();
+            setTimeout(useTemplateData, 500);
+        }
+
+        function exportRules() {
+            alert('规则导出功能将在下个版本中实现。');
+        }
+
+        function importRules() {
+            alert('规则导入功能将在下个版本中实现。');
+        }
+
+        function viewStrategyDetails(strategyId) {
+            alert(`查看策略详情: ${strategyId}`);
+        }
+
+        function stopStrategy(strategyId) {
+            if (confirm(`确定要停止策略 ${strategyId} 吗？`)) {
+                alert(`策略 ${strategyId} 已停止`);
+                loadActiveStrategies();
+                updateDashboardMetrics();
+            }
+        }
+
+        // Unified Close Modal for Order Records
+        function openUnifiedCloseModal(arbitrageId) {
+            const pair = orderRecords.find(p => p.arbitrage_id === arbitrageId);
+            if (!pair) return;
+
+            const modal = document.getElementById('closeModal');
+            const modalTitle = document.getElementById('closeModalTitle');
+            const modalBody = document.getElementById('closeModalBody');
+
+            modalTitle.textContent = '平仓套利位置';
+            
+            // Calculate current P&L
+            const currentProfit = pair.expected_pnl_percent || 0;
+            const profitClass = currentProfit > 0 ? 'profit-positive' : (currentProfit < 0 ? 'profit-negative' : '');
+            
+            modalBody.innerHTML = `
+                <div style="margin-bottom: 20px;">
+                    <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; border-radius: 6px; padding: 12px; margin: 10px 0;">
+                        <strong>位置: ${pair.arbitrage_id}</strong><br>
+                        <span style="font-size: 14px; color: #ccc;">${pair.symbol} - $${Math.round(pair.amount).toLocaleString()}</span>
+                    </div>
+                </div>
+                
+                <!-- Current Position Status -->
+                <div class="trade-form-section">
+                    <h5>当前位置状态</h5>
+                    <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+                        <div style="flex: 1; background: rgba(16, 185, 129, 0.1); border: 1px solid #10b981; border-radius: 6px; padding: 10px;">
+                            <div style="font-size: 12px; color: #10b981; font-weight: bold;">多头位置</div>
+                            <div style="font-size: 11px; color: #ccc; margin-top: 2px;">${pair.long_exchange.toUpperCase()}</div>
+                            <div style="margin-top: 5px;">
+                                <span style="font-size: 11px;">$${pair.long_price.toFixed(2)}</span>
+                            </div>
+                        </div>
+                        
+                        <div style="flex: 1; background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; border-radius: 6px; padding: 10px;">
+                            <div style="font-size: 12px; color: #ef4444; font-weight: bold;">空头位置</div>
+                            <div style="font-size: 11px; color: #ccc; margin-top: 2px;">${pair.short_exchange.toUpperCase()}</div>
+                            <div style="margin-top: 5px;">
+                                <span style="font-size: 11px;">$${pair.short_price.toFixed(2)}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="text-align: center; padding: 10px; background: rgba(102, 126, 234, 0.1); border-radius: 6px;">
+                        <div style="font-size: 12px; color: #888;">当前盈亏</div>
+                        <div class="${profitClass}" style="font-size: 16px; font-weight: bold; margin-top: 2px;">
+                            ${currentProfit > 0 ? '+' : ''}${currentProfit.toFixed(3)}% 
+                            <span style="font-size: 12px; margin-left: 5px;">($${pair.current_pnl > 0 ? '+' : ''}${pair.current_pnl.toFixed(2)})</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Close Mode Selection -->
+                <div class="trade-form-section">
+                    <h5>平仓模式</h5>
+                                         <div class="price-mode-selector">
+                         <button class="price-mode-btn active" onclick="setCloseMode('market')">
+                             市价平仓
+                         </button>
+                         <button class="price-mode-btn" onclick="setCloseMode('limit')">
+                             限价平仓
+                         </button>
+                         <button class="price-mode-btn" onclick="setCloseMode('partial')">
+                             部分平仓
+                         </button>
+                     </div>
+                    
+                    <!-- Market Close Display -->
+                    <div id="marketCloseDisplay" class="close-mode-display">
+                        <div class="market-warning">
+                            <strong>市价平仓警告:</strong><br>
+                            市价单将以最佳可用价格立即执行。由于市场波动和滑点，最终执行价格可能与显示价格不同。
+                        </div>
+                    </div>
+                    
+                                         <!-- Limit Close Display -->
+                     <div id="limitCloseDisplay" class="close-mode-display" style="display: none;">
+                         <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid #10b981; border-radius: 6px; padding: 10px;">
+                             <strong>限价平仓:</strong><br>
+                             设置指定价格进行平仓，只有在达到目标价格时才会执行。可以更好地控制平仓价格。
+                         </div>
+                         <div style="margin-top: 15px;">
+                             <div class="trade-form-section" style="margin-bottom: 15px;">
+                                 <h5>平多头 (${pair.long_exchange.toUpperCase()})</h5>
+                                 <div class="control-group">
+                                     <label for="closeLongPrice" style="font-size: 12px; color: #ccc;">卖出价格</label>
+                                     <input type="number" id="closeLongPrice" 
+                                            value="${(pair.long_price * 1.002).toFixed(2)}" 
+                                            step="0.01" min="0"
+                                            style="padding: 8px; background: #444; border: 1px solid #555; border-radius: 4px; color: #fff; font-family: 'Monaco', 'Consolas', monospace;">
+                                 </div>
+                                 <div style="font-size: 11px; color: #888; margin-top: 4px;">
+                                     当前价格: $${pair.long_price.toFixed(2)} | 建议范围: $${(pair.long_price * 1.001).toFixed(2)} - $${(pair.long_price * 1.005).toFixed(2)}
+                                 </div>
+                             </div>
+                             
+                             <div class="trade-form-section">
+                                 <h5>平空头 (${pair.short_exchange.toUpperCase()})</h5>
+                                 <div class="control-group">
+                                     <label for="closeShortPrice" style="font-size: 12px; color: #ccc;">买入价格</label>
+                                     <input type="number" id="closeShortPrice" 
+                                            value="${(pair.short_price * 0.998).toFixed(2)}" 
+                                            step="0.01" min="0"
+                                            style="padding: 8px; background: #444; border: 1px solid #555; border-radius: 4px; color: #fff; font-family: 'Monaco', 'Consolas', monospace;">
+                                 </div>
+                                 <div style="font-size: 11px; color: #888; margin-top: 4px;">
+                                     当前价格: $${pair.short_price.toFixed(2)} | 建议范围: $${(pair.short_price * 0.995).toFixed(2)} - $${(pair.short_price * 0.999).toFixed(2)}
+                                 </div>
+                             </div>
+                             
+                             <div style="background: rgba(102, 126, 234, 0.1); border: 1px solid #667eea; border-radius: 6px; padding: 10px; margin-top: 15px;">
+                                 <div style="font-size: 12px; color: #888; text-align: center;">预期平仓收益</div>
+                                 <div id="limitProfitEstimate" style="font-size: 14px; font-weight: bold; text-align: center; margin-top: 4px; color: #10b981;">
+                                     计算中...
+                                 </div>
+                             </div>
+                         </div>
+                     </div>
+                    
+                    <!-- Partial Close Display -->
+                    <div id="partialCloseDisplay" class="close-mode-display" style="display: none;">
+                        <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid #f59e0b; border-radius: 6px; padding: 10px;">
+                            <strong>部分平仓:</strong><br>
+                            只平仓指定比例的套利头寸，保留剩余部分继续运行。
+                        </div>
+                        <div style="margin-top: 15px;">
+                            <label style="font-size: 12px; color: #ccc; display: block; margin-bottom: 5px;">平仓比例: <span id="closePercentageValue">50</span>%</label>
+                            <input type="range" id="closePercentageSlider" min="10" max="100" value="50" step="10" 
+                                   style="width: 100%; margin-bottom: 10px;" oninput="updateClosePercentage()">
+                            <div style="font-size: 11px; color: #888; text-align: center;">
+                                保留金额: $<span id="remainingAmount">${Math.round(pair.amount * 0.5).toLocaleString()}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button class="btn btn-danger" onclick="executeUnifiedClose('${arbitrageId}')">
+                        执行平仓
+                    </button>
+                    <button class="btn btn-secondary" onclick="closeCloseModal()">
+                        ❌ 取消
+                    </button>
+                </div>
+            `;
+
+            modal.style.display = 'block';
+        }
+
+        // Close mode selection functions
+        function setCloseMode(mode) {
+            // Update button states
+            document.querySelectorAll('.price-mode-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Hide all mode displays
+            document.getElementById('marketCloseDisplay').style.display = 'none';
+            document.getElementById('limitCloseDisplay').style.display = 'none';
+            document.getElementById('partialCloseDisplay').style.display = 'none';
+            
+            // Show selected display
+            switch(mode) {
+                case 'market':
+                    document.getElementById('marketCloseDisplay').style.display = 'block';
+                    break;
+                case 'limit':
+                    document.getElementById('limitCloseDisplay').style.display = 'block';
+                    // Set up event listeners for price inputs
+                    setTimeout(() => {
+                        const longPriceInput = document.getElementById('closeLongPrice');
+                        const shortPriceInput = document.getElementById('closeShortPrice');
+                        if (longPriceInput && shortPriceInput) {
+                            longPriceInput.addEventListener('input', updateLimitProfitEstimate);
+                            shortPriceInput.addEventListener('input', updateLimitProfitEstimate);
+                            updateLimitProfitEstimate(); // Initial calculation
+                        }
+                    }, 100);
+                    break;
+                case 'partial':
+                    document.getElementById('partialCloseDisplay').style.display = 'block';
+                    break;
+            }
+        }
+
+        function updateClosePercentage() {
+            const slider = document.getElementById('closePercentageSlider');
+            const valueDisplay = document.getElementById('closePercentageValue');
+            const remainingAmount = document.getElementById('remainingAmount');
+            
+            if (slider && valueDisplay && remainingAmount) {
+                const percentage = slider.value;
+                valueDisplay.textContent = percentage;
+                
+                // Extract arbitrage ID from modal context
+                const modalBody = document.getElementById('closeModalBody');
+                if (modalBody && modalBody.innerHTML.includes('ARB-')) {
+                    const match = modalBody.innerHTML.match(/ARB-\d{3}/);
+                    if (match) {
+                        const arbitrageId = match[0];
+                        const currentPair = orderRecords.find(p => p.arbitrage_id === arbitrageId);
+                        if (currentPair) {
+                            const remaining = Math.round(currentPair.amount * (100 - percentage) / 100);
+                            remainingAmount.textContent = remaining.toLocaleString();
+                            return;
+                        }
+                    }
+                }
+                
+                // Fallback: use a default amount if we can't find the specific pair
+                const defaultAmount = 2000;
+                const remaining = Math.round(defaultAmount * (100 - percentage) / 100);
+                remainingAmount.textContent = remaining.toLocaleString();
+            }
+        }
+
+        function updateLimitProfitEstimate() {
+            const longPriceInput = document.getElementById('closeLongPrice');
+            const shortPriceInput = document.getElementById('closeShortPrice');
+            const profitDisplay = document.getElementById('limitProfitEstimate');
+            
+            if (!longPriceInput || !shortPriceInput || !profitDisplay) return;
+            
+            const longPrice = parseFloat(longPriceInput.value) || 0;
+            const shortPrice = parseFloat(shortPriceInput.value) || 0;
+            
+            // Extract arbitrage ID and find current pair
+            const modalBody = document.getElementById('closeModalBody');
+            let currentPair = null;
+            
+            if (modalBody && modalBody.innerHTML.includes('ARB-')) {
+                const match = modalBody.innerHTML.match(/ARB-\d{3}/);
+                if (match) {
+                    const arbitrageId = match[0];
+                    currentPair = orderRecords.find(p => p.arbitrage_id === arbitrageId);
+                }
+            }
+            
+            if (longPrice > 0 && shortPrice > 0 && currentPair) {
+                // Calculate profit based on original positions and new close prices
+                const originalLongPrice = currentPair.long_price;
+                const originalShortPrice = currentPair.short_price;
+                const amount = currentPair.amount;
+                
+                // Profit from long position (sell at longPrice vs bought at originalLongPrice)
+                const longProfit = (longPrice - originalLongPrice) * amount / originalLongPrice;
+                
+                // Profit from short position (bought at originalShortPrice vs cover at shortPrice)
+                const shortProfit = (originalShortPrice - shortPrice) * amount / originalShortPrice;
+                
+                // Total profit minus estimated fees
+                const totalFees = amount * 0.0004; // 0.02% close fees for both sides
+                const totalProfit = longProfit + shortProfit - totalFees;
+                const profitPercentage = (totalProfit / amount) * 100;
+                
+                if (profitPercentage > 0) {
+                    profitDisplay.innerHTML = `<span style="color: #10b981;">+${profitPercentage.toFixed(3)}% (+$${totalProfit.toFixed(2)})</span>`;
+                } else {
+                    profitDisplay.innerHTML = `<span style="color: #ef4444;">${profitPercentage.toFixed(3)}% ($${totalProfit.toFixed(2)})</span>`;
+                }
+            } else {
+                profitDisplay.innerHTML = '<span style="color: #888;">输入有效价格计算收益</span>';
+            }
+        }
+
+        function executeUnifiedClose(arbitrageId) {
+            const pair = orderRecords.find(p => p.arbitrage_id === arbitrageId);
+            if (!pair) return;
+            
+            // Determine close mode
+            const activeMode = document.querySelector('.price-mode-btn.active');
+            let closeMode = 'market';
+            let additionalParams = {};
+            
+            if (activeMode) {
+                if (activeMode.textContent.includes('市价')) {
+                    closeMode = 'market';
+                } else if (activeMode.textContent.includes('限价')) {
+                    closeMode = 'limit';
+                    const longPrice = parseFloat(document.getElementById('closeLongPrice')?.value) || 0;
+                    const shortPrice = parseFloat(document.getElementById('closeShortPrice')?.value) || 0;
+                    additionalParams.longPrice = longPrice;
+                    additionalParams.shortPrice = shortPrice;
+                } else if (activeMode.textContent.includes('部分')) {
+                    closeMode = 'partial';
+                    const percentage = document.getElementById('closePercentageSlider')?.value || 50;
+                    additionalParams.closePercentage = percentage;
+                }
+            }
+            
+            // Show confirmation based on mode
+            let confirmMessage = '';
+            switch (closeMode) {
+                case 'market':
+                    confirmMessage = `确认以市价立即平仓套利 ${arbitrageId}？\n\n` +
+                                   `交易对: ${pair.symbol}\n` +
+                                   `金额: $${Math.round(pair.amount).toLocaleString()}\n\n` +
+                                   `市价单将立即执行，价格可能存在滑点。`;
+                    break;
+                case 'limit':
+                    // Validate prices first
+                    if (!additionalParams.longPrice || !additionalParams.shortPrice || 
+                        additionalParams.longPrice <= 0 || additionalParams.shortPrice <= 0) {
+                        alert('请输入有效的平仓价格！');
+                        return;
+                    }
+                    
+                    confirmMessage = `确认限价平仓 ${arbitrageId}？\n\n` +
+                                   `交易对: ${pair.symbol}\n` +
+                                   `金额: $${Math.round(pair.amount).toLocaleString()}\n` +
+                                   `平多头价格: $${additionalParams.longPrice.toFixed(2)} (${pair.long_exchange.toUpperCase()})\n` +
+                                   `平空头价格: $${additionalParams.shortPrice.toFixed(2)} (${pair.short_exchange.toUpperCase()})\n\n` +
+                                   `限价单将在达到指定价格时执行。`;
+                    break;
+                case 'partial':
+                    const closeAmount = Math.round(pair.amount * additionalParams.closePercentage / 100);
+                    const remainAmount = pair.amount - closeAmount;
+                    confirmMessage = `确认部分平仓 ${arbitrageId}？\n\n` +
+                                   `交易对: ${pair.symbol}\n` +
+                                   `平仓金额: $${closeAmount.toLocaleString()} (${additionalParams.closePercentage}%)\n` +
+                                   `保留金额: $${remainAmount.toLocaleString()}\n\n` +
+                                   `将以市价平仓指定比例的头寸。`;
+                    break;
+            }
+            
+            if (confirm(confirmMessage)) {
+                alert(`${closeMode === 'market' ? '市价平仓' : 
+                      closeMode === 'limit' ? '限价平仓' : 
+                      '部分平仓'} 指令已发送！\n\n` +
+                      `套利ID: ${arbitrageId}\n` +
+                      `模式: ${closeMode.toUpperCase()}`);
+                
+                // Update pair status
+                if (pair) {
+                    pair.status = 'pending_close';
+                }
+                
+                closeCloseModal();
+                loadOrderRecords();
+            }
+        }
+
+        function closeCloseModal() {
+            document.getElementById('closeModal').style.display = 'none';
+        }
+
+        function viewArbitrageDetails(arbitrageId) {
+            const pair = orderRecords.find(p => p.arbitrage_id === arbitrageId);
+            if (!pair) return;
+
+            const modal = document.getElementById('detailsModal');
+            const modalBody = document.getElementById('detailsModalBody');
+            
+            modalBody.innerHTML = `
+                <h4>套利详情: ${pair.arbitrage_id} - ${pair.symbol}</h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;">
+                    <div class="trade-form-section">
+                        <h5>📈 盈亏分析</h5>
+                        <p><strong>预期总盈亏:</strong> <span class="${pair.expected_pnl >= 0 ? 'profit-positive' : 'profit-negative'}">$${pair.expected_pnl.toFixed(2)} (${pair.expected_pnl_percent.toFixed(2)}%)</span></p>
+                        <p><strong>当前浮动盈亏:</strong> <span class="${pair.current_pnl >= 0 ? 'profit-positive' : 'profit-negative'}">$${pair.current_pnl.toFixed(2)}</span></p>
+                        <p><strong>手续费总计:</strong> $${pair.fees.total.toFixed(2)}</p>
+                        <p><strong>资金费净额(8H):</strong> <span class="${pair.funding_rates.net_8h >= 0 ? 'profit-positive' : 'profit-negative'}">$${pair.funding_rates.net_8h.toFixed(2)}</span></p>
+                    </div>
+                    <div class="trade-form-section">
+                        <h5>🕒 时间信息</h5>
+                        <p><strong>创建时间:</strong> ${new Date(pair.created_at).toLocaleString()}</p>
+                        <p><strong>预计关闭时间:</strong> ${new Date(pair.estimated_close_time).toLocaleString()}</p>
+                         <p><strong>状态:</strong> ${getStatusText(pair.status)}</p>
+                    </div>
+                    <div class="trade-form-section">
+                        <h5>🟢 多头信息</h5>
+                        <p><strong>交易所:</strong> ${pair.long_exchange.toUpperCase()}</p>
+                        <p><strong>开仓价格:</strong> $${pair.long_price.toFixed(2)}</p>
+                        <p><strong>手续费 (开/平):</strong> $${pair.fees.long_open.toFixed(2)} / $${pair.fees.long_close.toFixed(2)}</p>
+                        <p><strong>资金费率:</strong> ${(pair.funding_rates.long_rate * 100).toFixed(4)}%</p>
+                    </div>
+                    <div class="trade-form-section">
+                        <h5>🔴 空头信息</h5>
+                        <p><strong>交易所:</strong> ${pair.short_exchange.toUpperCase()}</p>
+                        <p><strong>开仓价格:</strong> $${pair.short_price.toFixed(2)}</p>
+                        <p><strong>手续费 (开/平):</strong> $${pair.fees.short_open.toFixed(2)} / $${pair.fees.short_close.toFixed(2)}</p>
+                        <p><strong>资金费率:</strong> ${(pair.funding_rates.short_rate * 100).toFixed(4)}%</p>
+                    </div>
+                </div>
+                 <div style="margin-top: 20px; text-align: right;">
+                    <button class="btn btn-secondary" onclick="closeDetailsModal()">关闭</button>
+                </div>
+            `;
+
+            modal.style.display = 'block';
+        }
+
+        function closeDetailsModal() {
+            document.getElementById('detailsModal').style.display = 'none';
+        }
+
+        // Individual Trade Operations
+        function viewTradeDetails(tradeId) {
+            const trade = orderRecords.find(t => t.trade_id === tradeId);
+            if (!trade) return;
+
+            const modal = document.getElementById('detailsModal');
+            const modalBody = document.getElementById('detailsModalBody');
+            
+            modalBody.innerHTML = `
+                <h4>交易详情: ${trade.trade_id}</h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;">
+                    <div class="trade-form-section">
+                        <h5>📊 交易信息</h5>
+                        <p><strong>套利组合:</strong> ${trade.arbitrage_id}</p>
+                        <p><strong>交易类型:</strong> <span class="${trade.trade_type === 'LONG' ? 'profit-positive' : 'profit-negative'}">${trade.trade_type} (${trade.trade_type === 'LONG' ? '买入' : '卖出'})</span></p>
+                        <p><strong>交易对:</strong> ${trade.symbol}</p>
+                        <p><strong>交易所:</strong> ${trade.exchange.toUpperCase()}</p>
+                        <p><strong>价格:</strong> $${trade.price.toFixed(2)}</p>
+                        <p><strong>订单状态:</strong> <span class="order-status ${getOrderStatusClass(trade.order_status)}">${getOrderStatusText(trade.order_status)}</span></p>
+                    </div>
+                    <div class="trade-form-section">
+                        <h5>📈 盈亏分析</h5>
+                        <p><strong>交易金额:</strong> $${trade.amount.toFixed(2)}</p>
+                        <p><strong>当前盈亏:</strong> <span class="${trade.current_pnl >= 0 ? 'profit-positive' : 'profit-negative'}">${trade.current_pnl >= 0 ? '+' : ''}$${trade.current_pnl.toFixed(2)}</span></p>
+                        <p><strong>开仓手续费:</strong> $${trade.fees.open.toFixed(2)}</p>
+                        <p><strong>平仓手续费:</strong> $${trade.fees.close.toFixed(2)}</p>
+                        <p><strong>手续费总计:</strong> $${trade.fees.total.toFixed(2)}</p>
+                        <p><strong>资金费率:</strong> <span class="${trade.funding_rate >= 0 ? 'profit-positive' : 'profit-negative'}">${(trade.funding_rate * 100).toFixed(4)}%</span></p>
+                    </div>
+                    <div class="trade-form-section">
+                        <h5>📦 数量信息</h5>
+                        <p><strong>总数量:</strong> ${trade.quantity.toFixed(6)} ${trade.symbol.split('-')[0]}</p>
+                        <p><strong>当前数量:</strong> ${trade.current_quantity.toFixed(6)} ${trade.symbol.split('-')[0]}</p>
+                        <p><strong>成交比例:</strong> ${((trade.current_quantity / trade.quantity) * 100).toFixed(2)}%</p>
+                    </div>
+                    <div class="trade-form-section">
+                        <h5>🕒 时间信息</h5>
+                        <p><strong>创建时间:</strong> ${new Date(trade.created_at).toLocaleString()}</p>
+                        <p><strong>预计关闭时间:</strong> ${new Date(trade.estimated_close_time).toLocaleString()}</p>
+                        <p><strong>资金费到期:</strong> ${trade.funding_expire_time}</p>
+                        <p><strong>套利状态:</strong> ${getStatusText(trade.pair_status)}</p>
+                    </div>
+                </div>
+                <div style="margin-top: 20px; text-align: right;">
+                    <button class="btn btn-secondary" onclick="closeDetailsModal()">关闭</button>
+                </div>
+            `;
+
+            modal.style.display = 'block';
+        }
+
+        function closeTrade(tradeId) {
+            const trade = orderRecords.find(t => t.trade_id === tradeId);
+            if (!trade) return;
+            
+            const modal = document.getElementById('tradeCloseModal');
+            const modalBody = document.getElementById('tradeCloseModalBody');
+            
+            modalBody.innerHTML = `
+                <div style="margin-bottom: 20px;">
+                    <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; border-radius: 6px; padding: 12px;">
+                        <strong>平仓交易: ${trade.trade_id}</strong><br>
+                        <span style="font-size: 14px; color: #ccc;">
+                            ${trade.trade_type} ${trade.symbol} @ ${trade.exchange.toUpperCase()}
+                        </span>
+                    </div>
+                </div>
+                
+                <!-- Trade Status -->
+                <div class="trade-form-section">
+                    <h5>交易状态</h5>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+                        <div>
+                            <div style="font-size: 12px; color: #888;">当前价格</div>
+                            <div style="font-size: 16px; font-weight: bold;">$${trade.price.toFixed(2)}</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 12px; color: #888;">持仓数量</div>
+                            <div style="font-size: 16px; font-weight: bold;">${trade.current_quantity.toFixed(6)}</div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-size: 12px; color: #888;">当前盈亏</div>
+                            <div class="${trade.current_pnl >= 0 ? 'profit-positive' : 'profit-negative'}" style="font-size: 16px; font-weight: bold;">
+                                ${trade.current_pnl >= 0 ? '+' : ''}$${trade.current_pnl.toFixed(2)}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Close Mode Selection -->
+                <div class="trade-form-section">
+                    <h5>平仓模式</h5>
+                    <div class="price-mode-selector">
+                        <button class="price-mode-btn active" onclick="setTradeCloseMode('market')">
+                            市价平仓
+                        </button>
+                        <button class="price-mode-btn" onclick="setTradeCloseMode('limit')">
+                            限价平仓
+                        </button>
+                    </div>
+                    
+                    <!-- Market Close Display -->
+                    <div id="marketTradeCloseDisplay" class="close-mode-display">
+                        <div class="market-warning">
+                            <strong>市价平仓警告:</strong><br>
+                            市价单将以最佳可用价格立即执行。由于市场波动和滑点，最终执行价格可能与当前价格不同。
+                        </div>
+                    </div>
+                    
+                    <!-- Limit Close Display -->
+                    <div id="limitTradeCloseDisplay" class="close-mode-display" style="display: none;">
+                        <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid #10b981; border-radius: 6px; padding: 10px;">
+                            <strong>限价平仓:</strong><br>
+                            设置指定价格进行平仓，只有在达到目标价格时才会执行。可以更好地控制平仓价格和收益。
+                        </div>
+                        <div style="margin-top: 15px;">
+                            <div class="trade-form-section">
+                                <h5>平仓价格 (${trade.exchange.toUpperCase()})</h5>
+                                <div class="control-group">
+                                    <label for="tradeClosePrice" style="font-size: 12px; color: #ccc;">限价平仓价格</label>
+                                    <input type="number" id="tradeClosePrice" 
+                                           value="${(trade.price * (trade.trade_type === 'LONG' ? 1.001 : 0.999)).toFixed(2)}" 
+                                           step="0.01" min="0"
+                                           style="padding: 8px; background: #444; border: 1px solid #555; border-radius: 4px; color: #fff; font-family: 'Monaco', 'Consolas', monospace;">
+                                </div>
+                                <div style="font-size: 11px; color: #888; margin-top: 4px;">
+                                    当前价格: $${trade.price.toFixed(2)} | 
+                                    建议范围: $${(trade.price * (trade.trade_type === 'LONG' ? 1.001 : 0.995)).toFixed(2)} - 
+                                    $${(trade.price * (trade.trade_type === 'LONG' ? 1.005 : 0.999)).toFixed(2)}
+                                </div>
+                            </div>
+                            
+                            <div style="background: rgba(102, 126, 234, 0.1); border: 1px solid #667eea; border-radius: 6px; padding: 10px; margin-top: 15px;">
+                                <div style="font-size: 12px; color: #888; text-align: center;">预期平仓收益</div>
+                                <div id="tradeCloseProfitEstimate" style="font-size: 14px; font-weight: bold; text-align: center; margin-top: 4px; color: #10b981;">
+                                    计算中...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button class="btn btn-danger" onclick="executeTradeClose('${trade.trade_id}')">
+                        执行平仓
+                    </button>
+                    <button class="btn btn-secondary" onclick="closeTradeCloseModal()">
+                        取消
+                    </button>
+                </div>
+            `;
+
+            modal.style.display = 'block';
+        }
+
+        function modifyTrade(tradeId) {
+            const trade = orderRecords.find(t => t.trade_id === tradeId);
+            if (!trade) return;
+            
+            const newPrice = prompt(`修改订单价格 (${trade.trade_id})\n\n当前价格: $${trade.price.toFixed(2)}\n请输入新价格:`, trade.price.toFixed(2));
+            
+            if (newPrice && !isNaN(newPrice) && parseFloat(newPrice) > 0) {
+                const confirmMessage = `确认修改订单价格？\n\n` +
+                                     `交易ID: ${trade.trade_id}\n` +
+                                     `原价格: $${trade.price.toFixed(2)}\n` +
+                                     `新价格: $${parseFloat(newPrice).toFixed(2)}`;
+                
+                if (confirm(confirmMessage)) {
+                    alert(`改单指令已发送！\n\n交易ID: ${trade.trade_id}\n新价格: $${parseFloat(newPrice).toFixed(2)}`);
+                    // Update trade price (simulation)
+                    trade.price = parseFloat(newPrice);
+                    loadOrderRecords(); // Refresh display
+                }
+            }
+        }
+
+        function cancelTrade(tradeId) {
+            const trade = orderRecords.find(t => t.trade_id === tradeId);
+            if (!trade) return;
+            
+            const confirmMessage = `确认取消订单 ${trade.trade_id}？\n\n` +
+                                 `交易类型: ${trade.trade_type} (${trade.trade_type === 'LONG' ? '买入' : '卖出'})\n` +
+                                 `交易对: ${trade.symbol}\n` +
+                                 `价格: $${trade.price.toFixed(2)}\n` +
+                                 `数量: ${trade.quantity.toFixed(6)} ${trade.symbol.split('-')[0]}`;
+            
+            if (confirm(confirmMessage)) {
+                alert(`撤单指令已发送！\n\n交易ID: ${trade.trade_id}\n订单将被取消`);
+                // Update trade status (simulation)
+                trade.order_status = 'cancelled';
+                loadOrderRecords(); // Refresh display
+            }
+        }
+
+        // Trade Close Modal functions
+        function closeTradeCloseModal() {
+            document.getElementById('tradeCloseModal').style.display = 'none';
+        }
+
+        function setTradeCloseMode(mode) {
+            // Update button states
+            document.querySelectorAll('#tradeCloseModal .price-mode-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Hide all mode displays
+            const marketDisplay = document.getElementById('marketTradeCloseDisplay');
+            const limitDisplay = document.getElementById('limitTradeCloseDisplay');
+            
+            if (marketDisplay) marketDisplay.style.display = 'none';
+            if (limitDisplay) limitDisplay.style.display = 'none';
+            
+            // Show selected display
+            switch(mode) {
+                case 'market':
+                    if (marketDisplay) marketDisplay.style.display = 'block';
+                    break;
+                case 'limit':
+                    if (limitDisplay) limitDisplay.style.display = 'block';
+                    // Set up event listener for price input
+                    setTimeout(() => {
+                        const closePriceInput = document.getElementById('tradeClosePrice');
+                        if (closePriceInput) {
+                            closePriceInput.addEventListener('input', updateTradeCloseProfitEstimate);
+                            updateTradeCloseProfitEstimate(); // Initial calculation
+                        }
+                    }, 100);
+                    break;
+            }
+        }
+
+        function updateTradeCloseProfitEstimate() {
+            const closePriceInput = document.getElementById('tradeClosePrice');
+            const profitDisplay = document.getElementById('tradeCloseProfitEstimate');
+            
+            if (!closePriceInput || !profitDisplay) return;
+            
+            const closePrice = parseFloat(closePriceInput.value) || 0;
+            
+            // Get trade data from modal
+            const modalBody = document.getElementById('tradeCloseModalBody');
+            const tradeIdMatch = modalBody.innerHTML.match(/ARB-\d{3}-(?:LONG|SHORT)/);
+            if (!tradeIdMatch) return;
+            
+            const trade = orderRecords.find(t => t.trade_id === tradeIdMatch[0]);
+            if (!trade || closePrice <= 0) {
+                profitDisplay.innerHTML = '<span style="color: #888;">输入有效价格计算收益</span>';
+                return;
+            }
+            
+            // Calculate profit based on trade type and close price
+            let profitFromPrice = 0;
+            if (trade.trade_type === 'LONG') {
+                // For long position: profit = (close_price - open_price) * quantity
+                profitFromPrice = (closePrice - trade.price) * trade.current_quantity;
+            } else {
+                // For short position: profit = (open_price - close_price) * quantity
+                profitFromPrice = (trade.price - closePrice) * trade.current_quantity;
+            }
+            
+            // Add existing P&L and subtract close fees
+            const totalProfit = profitFromPrice + trade.current_pnl - trade.fees.close;
+            
+            if (totalProfit > 0) {
+                profitDisplay.innerHTML = `<span style="color: #10b981;">+$${totalProfit.toFixed(2)}</span>`;
+            } else {
+                profitDisplay.innerHTML = `<span style="color: #ef4444;">$${totalProfit.toFixed(2)}</span>`;
+            }
+        }
+
+        function executeTradeClose(tradeId) {
+            const trade = orderRecords.find(t => t.trade_id === tradeId);
+            if (!trade) return;
+            
+            // Determine close mode
+            const activeMode = document.querySelector('#tradeCloseModal .price-mode-btn.active');
+            let closeMode = 'market';
+            let closePrice = trade.price;
+            
+            if (activeMode) {
+                if (activeMode.textContent.includes('市价')) {
+                    closeMode = 'market';
+                } else if (activeMode.textContent.includes('限价')) {
+                    closeMode = 'limit';
+                    closePrice = parseFloat(document.getElementById('tradeClosePrice')?.value) || trade.price;
+                    
+                    // Validate limit price
+                    if (closePrice <= 0) {
+                        alert('请输入有效的平仓价格！');
+                        return;
+                    }
+                }
+            }
+            
+            // Show confirmation based on mode
+            let confirmMessage = '';
+            if (closeMode === 'market') {
+                confirmMessage = `确认市价平仓交易 ${trade.trade_id}？\n\n` +
+                               `交易类型: ${trade.trade_type} (${trade.trade_type === 'LONG' ? '买入' : '卖出'})\n` +
+                               `交易对: ${trade.symbol}\n` +
+                               `交易所: ${trade.exchange.toUpperCase()}\n` +
+                               `当前数量: ${trade.current_quantity.toFixed(6)} ${trade.symbol.split('-')[0]}\n` +
+                               `当前盈亏: ${trade.current_pnl >= 0 ? '+' : ''}$${trade.current_pnl.toFixed(2)}\n\n` +
+                               `市价单将立即执行，价格可能存在滑点。`;
+            } else {
+                confirmMessage = `确认限价平仓交易 ${trade.trade_id}？\n\n` +
+                               `交易类型: ${trade.trade_type} (${trade.trade_type === 'LONG' ? '买入' : '卖出'})\n` +
+                               `交易对: ${trade.symbol}\n` +
+                               `交易所: ${trade.exchange.toUpperCase()}\n` +
+                               `当前价格: $${trade.price.toFixed(2)}\n` +
+                               `平仓价格: $${closePrice.toFixed(2)}\n` +
+                               `当前数量: ${trade.current_quantity.toFixed(6)} ${trade.symbol.split('-')[0]}\n\n` +
+                               `限价单将在达到指定价格时执行。`;
+            }
+            
+            if (confirm(confirmMessage)) {
+                alert(`${closeMode === 'market' ? '市价平仓' : '限价平仓'} 指令已发送！\n\n` +
+                      `交易ID: ${trade.trade_id}\n` +
+                      `平仓价格: ${closeMode === 'market' ? '市价' : '$' + closePrice.toFixed(2)}\n` +
+                      `模式: ${closeMode.toUpperCase()}`);
+                
+                closeTradeCloseModal();
+                
+                // Update trade status (simulation)
+                trade.order_status = 'pending_close';
+                if (closeMode === 'limit') {
+                    trade.close_price = closePrice;
+                }
+                
+                // Refresh order records
+                loadOrderRecords();
+            }
+        }
+
+        // Position Opening Modal functions
+        function openPositionModal(oppJson) {
+            const opp = JSON.parse(decodeURIComponent(oppJson));
+            
+            const modal = document.getElementById('positionModal');
+            const modalBody = document.getElementById('positionModalBody');
+            
+            modalBody.innerHTML = `
+                <div style="margin-bottom: 20px;">
+                    <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid #10b981; border-radius: 6px; padding: 12px; margin: 10px 0;">
+                        <strong>开仓机会: ${opp.symbol}</strong><br>
+                        <span style="font-size: 14px; color: #ccc;">价差: +${opp.spread_percentage.toFixed(3)}% | 预期收益: +${(opp.estimated_profit || 0).toFixed(3)}%</span>
+                    </div>
+                </div>
+                
+                <!-- Position Details -->
+                <div class="trade-form-section">
+                    <h5>套利详情</h5>
+                    <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+                        <div style="flex: 1; background: rgba(16, 185, 129, 0.1); border: 1px solid #10b981; border-radius: 6px; padding: 10px;">
+                            <div style="font-size: 12px; color: #10b981; font-weight: bold;">买入 (多头)</div>
+                            <div style="font-size: 11px; color: #ccc; margin-top: 2px;">${opp.buy_exchange.toUpperCase()}</div>
+                            <div style="margin-top: 5px;">
+                                <span style="font-size: 11px;">$${opp.buy_price.toFixed(2)}</span>
+                            </div>
+                        </div>
+                        
+                        <div style="flex: 1; background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; border-radius: 6px; padding: 10px;">
+                            <div style="font-size: 12px; color: #ef4444; font-weight: bold;">卖出 (空头)</div>
+                            <div style="font-size: 11px; color: #ccc; margin-top: 2px;">${opp.sell_exchange.toUpperCase()}</div>
+                            <div style="margin-top: 5px;">
+                                <span style="font-size: 11px;">$${opp.sell_price.toFixed(2)}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Opening Mode Selection -->
+                <div class="trade-form-section">
+                    <h5>开仓模式</h5>
+                    <div class="price-mode-selector">
+                        <button class="price-mode-btn active" onclick="setOpenMode('market')">
+                            市价开仓
+                        </button>
+                        <button class="price-mode-btn" onclick="setOpenMode('limit')">
+                            限价开仓
+                        </button>
+                    </div>
+                    
+                    <!-- Market Open Display -->
+                    <div id="marketOpenDisplay" class="close-mode-display">
+                        <div class="market-warning">
+                            <strong>市价开仓警告:</strong><br>
+                            市价单将以最佳可用价格立即执行。由于市场波动和滑点，最终执行价格可能与显示价格不同。
+                        </div>
+                    </div>
+                    
+                    <!-- Limit Open Display -->
+                    <div id="limitOpenDisplay" class="close-mode-display" style="display: none;">
+                        <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid #10b981; border-radius: 6px; padding: 10px;">
+                            <strong>限价开仓:</strong><br>
+                            设置指定价格进行开仓，只有在达到目标价格时才会执行。可以更好地控制开仓价格。
+                        </div>
+                        <div style="margin-top: 15px;">
+                            <div class="trade-form-section" style="margin-bottom: 15px;">
+                                <h5>买入价格 (${opp.buy_exchange.toUpperCase()})</h5>
+                                <div class="control-group">
+                                    <label for="openBuyPrice" style="font-size: 12px; color: #ccc;">限价买入</label>
+                                    <input type="number" id="openBuyPrice" 
+                                           value="${(opp.buy_price * 0.999).toFixed(2)}" 
+                                           step="0.01" min="0"
+                                           style="padding: 8px; background: #444; border: 1px solid #555; border-radius: 4px; color: #fff; font-family: 'Monaco', 'Consolas', monospace;">
+                                </div>
+                                <div style="font-size: 11px; color: #888; margin-top: 4px;">
+                                    当前价格: $${opp.buy_price.toFixed(2)} | 建议范围: $${(opp.buy_price * 0.995).toFixed(2)} - $${(opp.buy_price * 0.999).toFixed(2)}
+                                </div>
+                            </div>
+                            
+                            <div class="trade-form-section">
+                                <h5>卖出价格 (${opp.sell_exchange.toUpperCase()})</h5>
+                                <div class="control-group">
+                                    <label for="openSellPrice" style="font-size: 12px; color: #ccc;">限价卖出</label>
+                                    <input type="number" id="openSellPrice" 
+                                           value="${(opp.sell_price * 1.001).toFixed(2)}" 
+                                           step="0.01" min="0"
+                                           style="padding: 8px; background: #444; border: 1px solid #555; border-radius: 4px; color: #fff; font-family: 'Monaco', 'Consolas', monospace;">
+                                </div>
+                                <div style="font-size: 11px; color: #888; margin-top: 4px;">
+                                    当前价格: $${opp.sell_price.toFixed(2)} | 建议范围: $${(opp.sell_price * 1.001).toFixed(2)} - $${(opp.sell_price * 1.005).toFixed(2)}
+                                </div>
+                            </div>
+                            
+                            <div style="background: rgba(102, 126, 234, 0.1); border: 1px solid #667eea; border-radius: 6px; padding: 10px; margin-top: 15px;">
+                                <div style="font-size: 12px; color: #888; text-align: center;">预期开仓收益</div>
+                                <div id="openProfitEstimate" style="font-size: 14px; font-weight: bold; text-align: center; margin-top: 4px; color: #10b981;">
+                                    计算中...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Trade Amount -->
+                <div class="trade-form-section">
+                    <h5>开仓金额</h5>
+                    <div class="control-group">
+                        <label for="openAmount">金额 (USDT)</label>
+                        <input type="number" id="openAmount" value="1000" min="100" step="100"
+                               style="padding: 8px; background: #444; border: 1px solid #555; border-radius: 4px; color: #fff; font-family: 'Monaco', 'Consolas', monospace;">
+                    </div>
+                    <div style="font-size: 11px; color: #888; margin-top: 4px;">
+                        建议金额: $1000 - $5000 | 最小金额: $100
+                    </div>
+                </div>
+                
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button class="btn btn-success" onclick="executePosition('${encodeURIComponent(JSON.stringify(opp))}')">
+                        执行开仓
+                    </button>
+                    <button class="btn btn-secondary" onclick="closePositionModal()">
+                        取消
+                    </button>
+                </div>
+            `;
+
+            modal.style.display = 'block';
+        }
+
+        function closePositionModal() {
+            document.getElementById('positionModal').style.display = 'none';
+        }
+
+        function setOpenMode(mode) {
+            // Update button states
+            document.querySelectorAll('.price-mode-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Hide all mode displays
+            document.getElementById('marketOpenDisplay').style.display = 'none';
+            document.getElementById('limitOpenDisplay').style.display = 'none';
+            
+            // Show selected display
+            switch(mode) {
+                case 'market':
+                    document.getElementById('marketOpenDisplay').style.display = 'block';
+                    break;
+                case 'limit':
+                    document.getElementById('limitOpenDisplay').style.display = 'block';
+                    // Set up event listeners for price inputs
+                    setTimeout(() => {
+                        const buyPriceInput = document.getElementById('openBuyPrice');
+                        const sellPriceInput = document.getElementById('openSellPrice');
+                        if (buyPriceInput && sellPriceInput) {
+                            buyPriceInput.addEventListener('input', updateOpenProfitEstimate);
+                            sellPriceInput.addEventListener('input', updateOpenProfitEstimate);
+                            updateOpenProfitEstimate(); // Initial calculation
+                        }
+                    }, 100);
+                    break;
+            }
+        }
+
+        function updateOpenProfitEstimate() {
+            const buyPriceInput = document.getElementById('openBuyPrice');
+            const sellPriceInput = document.getElementById('openSellPrice');
+            const profitDisplay = document.getElementById('openProfitEstimate');
+            
+            if (!buyPriceInput || !sellPriceInput || !profitDisplay) return;
+            
+            const buyPrice = parseFloat(buyPriceInput.value) || 0;
+            const sellPrice = parseFloat(sellPriceInput.value) || 0;
+            const amount = parseFloat(document.getElementById('openAmount')?.value) || 1000;
+            
+            if (buyPrice > 0 && sellPrice > 0) {
+                // Calculate spread based on limit prices
+                const spread = ((sellPrice - buyPrice) / buyPrice) * 100;
+                const estimatedProfit = spread - 0.1; // Subtract estimated fees
+                const profitUSD = amount * estimatedProfit / 100;
+                
+                if (estimatedProfit > 0) {
+                    profitDisplay.innerHTML = `<span style="color: #10b981;">+${estimatedProfit.toFixed(3)}% (+$${profitUSD.toFixed(2)})</span>`;
+                } else {
+                    profitDisplay.innerHTML = `<span style="color: #ef4444;">${estimatedProfit.toFixed(3)}% ($${profitUSD.toFixed(2)})</span>`;
+                }
+            } else {
+                profitDisplay.innerHTML = '<span style="color: #888;">输入有效价格计算收益</span>';
+            }
+        }
+
+        function executePosition(oppJson) {
+            const opp = JSON.parse(decodeURIComponent(oppJson));
+            const amount = parseFloat(document.getElementById('openAmount').value);
+            
+            if (!amount || amount < 100) {
+                alert('请输入有效的开仓金额 (最小 $100)');
+                return;
+            }
+            
+            // Determine open mode
+            const activeMode = document.querySelector('.price-mode-btn.active');
+            let openMode = 'market';
+            let additionalParams = {};
+            
+            if (activeMode) {
+                if (activeMode.textContent.includes('市价')) {
+                    openMode = 'market';
+                } else if (activeMode.textContent.includes('限价')) {
+                    openMode = 'limit';
+                    const buyPrice = parseFloat(document.getElementById('openBuyPrice')?.value) || 0;
+                    const sellPrice = parseFloat(document.getElementById('openSellPrice')?.value) || 0;
+                    additionalParams.buyPrice = buyPrice;
+                    additionalParams.sellPrice = sellPrice;
+                }
+            }
+            
+            // Show confirmation based on mode
+            let confirmMessage = '';
+            if (openMode === 'market') {
+                confirmMessage = `确认市价开仓套利 ${opp.symbol}？\n\n` +
+                               `交易对: ${opp.symbol}\n` +
+                               `金额: $${amount.toLocaleString()}\n` +
+                               `买入: ${opp.buy_exchange.toUpperCase()} ~$${opp.buy_price.toFixed(2)}\n` +
+                               `卖出: ${opp.sell_exchange.toUpperCase()} ~$${opp.sell_price.toFixed(2)}\n\n` +
+                               `市价单将立即执行，价格可能存在滑点。`;
+            } else {
+                // Validate prices first
+                if (!additionalParams.buyPrice || !additionalParams.sellPrice || 
+                    additionalParams.buyPrice <= 0 || additionalParams.sellPrice <= 0) {
+                    alert('请输入有效的开仓价格！');
+                    return;
+                }
+                
+                confirmMessage = `确认限价开仓套利 ${opp.symbol}？\n\n` +
+                               `交易对: ${opp.symbol}\n` +
+                               `金额: $${amount.toLocaleString()}\n` +
+                               `买入价格: $${additionalParams.buyPrice.toFixed(2)} (${opp.buy_exchange.toUpperCase()})\n` +
+                               `卖出价格: $${additionalParams.sellPrice.toFixed(2)} (${opp.sell_exchange.toUpperCase()})\n\n` +
+                               `限价单将在达到指定价格时执行。`;
+            }
+            
+            if (confirm(confirmMessage)) {
+                alert(`${openMode === 'market' ? '市价开仓' : '限价开仓'} 指令已发送！\n\n` +
+                      `交易对: ${opp.symbol}\n` +
+                      `金额: $${amount.toLocaleString()}\n` +
+                      `模式: ${openMode.toUpperCase()}`);
+                
+                closePositionModal();
+                
+                // Refresh opportunities after opening position
+                scanOpportunities();
+            }
+        }
+
+        function showLoading() {
+            document.getElementById('scanSpinner').style.display = 'inline-block';
+            setTimeout(() => {
+                document.getElementById('scanSpinner').style.display = 'none';
+            }, 2000);
+        }
+
+        function startAutoRefresh() {
+            refreshInterval = setInterval(() => {
+                if (!autoTradingEnabled) {
+                    updateDashboardMetrics();
+                    if (document.getElementById('dashboard').classList.contains('active')) {
+                        loadActiveStrategies();
+                    }
+                }
+            }, 30000);
+        }
+
+        function setupFilterEventListeners() {
+            // Add event listeners for filter changes
+            const filters = [
+                'arbitrageType', 'minSpread', 'minProfit', 'maxRisk', 
+                'symbolFilter', 'exchangeA', 'exchangeB'
+            ];
+            
+            filters.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    const eventType = element.tagName.toLowerCase() === 'select' ? 'change' : 'input';
+                    element.addEventListener(eventType, debounce(renderOpportunities, 300));
+                }
+            });
+        }
+
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const tradeModal = document.getElementById('tradeModal');
+            const rulesModal = document.getElementById('rulesModal');
+            const closeModal = document.getElementById('closeModal');
+            const detailsModal = document.getElementById('detailsModal');
+            const positionModal = document.getElementById('positionModal');
+            const tradeCloseModal = document.getElementById('tradeCloseModal');
+            const ruleDetailsModal = document.getElementById('ruleDetailsModal');
+            
+            if (event.target === tradeModal) {
+                tradeModal.style.display = 'none';
+            }
+            if (event.target === rulesModal) {
+                rulesModal.style.display = 'none';
+            }
+            if (event.target === closeModal) {
+                closeModal.style.display = 'none';
+            }
+            if (event.target === detailsModal) {
+                detailsModal.style.display = 'none';
+            }
+            if (event.target === positionModal) {
+                positionModal.style.display = 'none';
+            }
+            if (event.target === tradeCloseModal) {
+                tradeCloseModal.style.display = 'none';
+            }
+            if (event.target === ruleDetailsModal) {
+                ruleDetailsModal.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html> 
