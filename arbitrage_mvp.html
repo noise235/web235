@@ -265,6 +265,39 @@
             gap: 6px;
         }
 
+        /* Rules Settings Page Styles */
+        #rulesContent table {
+            background: rgba(17, 24, 39, 0.6);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        #rulesContent th {
+            background: rgba(59, 130, 246, 0.15);
+            border-bottom: 2px solid #3b82f6;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        #rulesContent td {
+            border-bottom: 1px solid #374151;
+            font-size: 12px;
+        }
+
+        #rulesContent tbody tr:hover {
+            background: rgba(55, 65, 81, 0.4) !important;
+        }
+
+        #rulesContent tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .rules-table-container {
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
         /* 响应式设计 */
         @media (max-width: 768px) {
             .controls-row {
@@ -1363,6 +1396,9 @@
             showTab('dashboard');
             startAutoRefresh();
             setupFilterEventListeners();
+            
+            // Initialize saved rules from localStorage
+            savedRules = JSON.parse(localStorage.getItem('arbitrageRules')) || [];
         });
 
         // Tab switching functionality
@@ -2851,6 +2887,103 @@
          function refreshRulesSettings() {
              // Refresh the rules settings page to reflect any changes
              loadRulesSettings();
+         }
+
+         // Export and Import Functions
+         function exportRules() {
+             if (savedRules.length === 0) {
+                 alert('暂无规则可导出！');
+                 return;
+             }
+
+             const exportData = {
+                 version: '1.0',
+                 exportTime: new Date().toISOString(),
+                 rules: savedRules
+             };
+
+             const dataStr = JSON.stringify(exportData, null, 2);
+             const dataBlob = new Blob([dataStr], {type: 'application/json'});
+             
+             const link = document.createElement('a');
+             link.href = URL.createObjectURL(dataBlob);
+             link.download = `arbitrage-rules-${new Date().toISOString().split('T')[0]}.json`;
+             link.click();
+             
+             alert(`已导出 ${savedRules.length} 个规则！`);
+         }
+
+         function importRules() {
+             const input = document.createElement('input');
+             input.type = 'file';
+             input.accept = '.json';
+             
+             input.onchange = function(event) {
+                 const file = event.target.files[0];
+                 if (!file) return;
+                 
+                 const reader = new FileReader();
+                 reader.onload = function(e) {
+                     try {
+                         const importData = JSON.parse(e.target.result);
+                         
+                         if (!importData.rules || !Array.isArray(importData.rules)) {
+                             throw new Error('无效的规则文件格式');
+                         }
+                         
+                         const importCount = importData.rules.length;
+                         const duplicateNames = [];
+                         
+                         // Check for duplicate names
+                         importData.rules.forEach(importRule => {
+                             const existing = savedRules.find(r => r.name === importRule.name);
+                             if (existing) {
+                                 duplicateNames.push(importRule.name);
+                             }
+                         });
+                         
+                         let proceedWithImport = true;
+                         if (duplicateNames.length > 0) {
+                             proceedWithImport = confirm(`发现重复规则名称：\n${duplicateNames.join(', ')}\n\n是否覆盖这些规则？`);
+                         }
+                         
+                         if (proceedWithImport) {
+                             // Remove duplicates first
+                             duplicateNames.forEach(name => {
+                                 savedRules = savedRules.filter(r => r.name !== name);
+                             });
+                             
+                             // Add imported rules
+                             importData.rules.forEach(importRule => {
+                                 importRule.id = Date.now().toString() + Math.random().toString(36).substr(2, 9);
+                                 importRule.updatedAt = new Date().toISOString();
+                                 savedRules.push(importRule);
+                             });
+                             
+                             // Save to localStorage
+                             localStorage.setItem('arbitrageRules', JSON.stringify(savedRules));
+                             
+                             // Refresh display
+                             refreshRulesSettings();
+                             
+                             alert(`成功导入 ${importCount} 个规则！`);
+                         }
+                         
+                     } catch (error) {
+                         alert(`导入失败：${error.message}`);
+                     }
+                 };
+                 reader.readAsText(file);
+             };
+             
+             input.click();
+         }
+
+         function useTemplate() {
+             // Create a template rule and open for editing
+             document.getElementById('ruleName').value = `模板规则-${new Date().toLocaleDateString()}`;
+             useTemplateData();
+             createNewRule();
          }
 
         // Utility functions (保持现有功能)
