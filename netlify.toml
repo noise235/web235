@@ -1,0 +1,21 @@
+[build]
+  publish = "build"
+  command = "bash netlify.sh"
+
+# 重定向和重写规则
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# 处理资源路径
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    
+[[headers]]
+  for = "/src/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000"
