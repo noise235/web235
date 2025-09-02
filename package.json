@@ -1,0 +1,130 @@
+{
+  "name": "impossible-arbitrage-system",
+  "version": "1.0.0",
+  "description": "Advanced multi-market arbitrage opportunities detection and execution platform",
+  "main": "src/js/main.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "nodemon server/index.js",
+    "build": "npm run build:css && npm run build:js",
+    "build:css": "postcss src/css/styles.css -o build/css/styles.min.css",
+    "build:js": "rollup -c rollup.config.js",
+    "serve": "http-server . -p 3000 -c-1 -o",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "lint": "eslint src/js/**/*.js",
+    "lint:fix": "eslint src/js/**/*.js --fix",
+    "docker:build": "docker build -t arbitrage-system .",
+    "docker:run": "docker run -p 8080:8080 arbitrage-system",
+    "deploy:staging": "npm run build && npm run deploy:upload staging",
+    "deploy:production": "npm run build && npm run deploy:upload production",
+    "deploy:upload": "node scripts/deploy.js"
+  },
+  "keywords": [
+    "arbitrage",
+    "cryptocurrency",
+    "trading",
+    "binance",
+    "okx",
+    "bybit",
+    "futures",
+    "spot",
+    "defi"
+  ],
+  "author": {
+    "name": "Arbitrage Team",
+    "email": "dev@arbitrage-system.com"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-org/impossible-arbitrage-system.git"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "cors": "^2.8.5",
+    "helmet": "^7.1.0",
+    "morgan": "^1.10.0",
+    "compression": "^1.7.4",
+    "dotenv": "^16.4.5",
+    "jsonwebtoken": "^9.0.2",
+    "bcryptjs": "^2.4.3",
+    "ws": "^8.17.0",
+    "socket.io": "^4.7.5",
+    "socket.io-client": "^4.7.5",
+    "axios": "^1.6.8",
+    "node-cron": "^3.0.3",
+    "redis": "^4.6.13",
+    "ioredis": "^5.3.2",
+    "pg": "^8.11.5",
+    "sqlite3": "^5.1.6",
+    "typeorm": "^0.3.20",
+    "winston": "^3.13.0",
+    "express-rate-limit": "^7.2.0",
+    "crypto-js": "^4.2.0",
+    "uuid": "^9.0.1",
+    "moment": "^2.30.1",
+    "lodash": "^4.17.21",
+    "ccxt": "^4.2.92"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.24.4",
+    "@babel/preset-env": "^7.24.4",
+    "@rollup/plugin-babel": "^6.0.4",
+    "@rollup/plugin-commonjs": "^25.0.7",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-terser": "^0.4.4",
+    "autoprefixer": "^10.4.19",
+    "postcss": "^8.4.38",
+    "postcss-cli": "^11.0.0",
+    "cssnano": "^6.1.2",
+    "rollup": "^4.17.2",
+    "eslint": "^8.57.0",
+    "prettier": "^3.2.5",
+    "jest": "^29.7.0",
+    "supertest": "^7.0.0",
+    "nodemon": "^3.1.0",
+    "http-server": "^14.1.1",
+    "concurrently": "^8.2.2"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead"
+  ],
+  "jest": {
+    "testEnvironment": "node",
+    "collectCoverage": true,
+    "coverageDirectory": "coverage",
+    "coverageReporters": ["text", "lcov", "html"],
+    "testMatch": ["**/__tests__/**/*.js", "**/*.test.js"],
+    "collectCoverageFrom": [
+      "src/**/*.js",
+      "server/**/*.js",
+      "!**/node_modules/**"
+    ]
+  },
+  "eslintConfig": {
+    "env": {
+      "browser": true,
+      "node": true,
+      "es2021": true
+    },
+    "extends": ["eslint:recommended"],
+    "parserOptions": {
+      "ecmaVersion": "latest",
+      "sourceType": "module"
+    },
+    "rules": {
+      "no-unused-vars": "warn",
+      "no-console": "off",
+      "prefer-const": "error",
+      "no-var": "error"
+    }
+  }
+}

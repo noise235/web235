@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Impossible Arbitrage System - MVP</title>
+    <link rel="stylesheet" href="../src/css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>Impossible Arbitrage System</h1>
+            <p>Advanced multi-market arbitrage opportunities detection and execution platform</p>
+        </div>
+
+        <!-- Dashboard Status Bar -->
+        <div class="status-bar">
+            <div class="status-item">
+                <div class="status-value" id="activeStrategies">0</div>
+                <div class="status-label">活跃策略</div>
+            </div>
+            <div class="status-item">
+                <div class="status-value" id="totalOpportunities">0</div>
+                <div class="status-label">套利机会</div>
+            </div>
+            <div class="status-item">
+                <div class="status-value" id="todayProfit">+0.00%</div>
+                <div class="status-label">今日收益</div>
+            </div>
+            <div class="status-item">
+                <div class="status-value" id="totalBalance">$0</div>
+                <div class="status-label">总资产</div>
+            </div>
+            <div class="status-item">
+                <div class="status-value" id="successRate">0.0%</div>
+                <div class="status-label">策略成功率</div>
+            </div>
+            <div class="status-item">
+                <div class="status-value" id="systemStatus">🟢</div>
+                <div class="status-label">系统状态</div>
+            </div>
+        </div>
+
+        <!-- Main Content Tabs -->
+        <div class="main-content">
+            <!-- Tab Navigation -->
+            <div class="tab-navigation">
+                <button class="tab-button active" onclick="showTab('dashboard')">Dashboard</button>
+                <button class="tab-button" onclick="showTab('market-monitoring')">Market Monitoring</button>
+                <button class="tab-button" onclick="showTab('order-records')">Order Records</button>
+                <button class="tab-button" onclick="showTab('rules-settings')">Rules Settings</button>
+            </div>
+
+            <!-- Dashboard Tab -->
+            <div id="dashboard" class="tab-content active">
+                <div class="section-header">
+                    <h2>Dashboard Overview</h2>
+                </div>
+                
+                <div class="controls-panel">
+                    <h3 style="margin-bottom: 15px; color: #fff;">活跃策略监控</h3>
+                    <div id="activeStrategiesContent">
+                        <div class="loading">
+                            <div class="spinner"></div>
+                            <p>Loading active strategies...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Market Monitoring Tab -->
+            <div id="market-monitoring" class="tab-content">
+                <div class="section-header">
+                    <h2>Market Monitoring</h2>
+                </div>
+                
+                <!-- Enhanced Market Monitoring Controls -->
+                <div class="controls-panel">
+                    <div class="filter-section-title">基础筛选</div>
+                    <!-- 第一行：基础筛选 -->
+                    <div class="controls-row">
+                        <div class="control-group">
+                            <label for="arbitrageType">套利类型</label>
+                            <select id="arbitrageType">
+                                <option value="futures-futures" selected>期期套利</option>
+                                <option value="futures-spot" disabled>期现套利</option>
+                                <option value="spot-spot" disabled>现现套利</option>
+                            </select>
+                        </div>
+                        <div class="control-group">
+                            <label for="minSpread">最小价差 (%)</label>
+                            <input type="number" id="minSpread" value="0.05" step="0.01" min="0">
+                        </div>
+                        <div class="control-group">
+                            <label for="minProfit">最小利润 (%)</label>
+                            <input type="number" id="minProfit" value="0.02" step="0.01" min="0">
+                        </div>
+                        <div class="control-group">
+                            <label for="symbolFilter">交易对</label>
+                            <select id="symbolFilter">
+                                <option value="">全部交易对</option>
+                                <option value="BTC-USDT">BTC-USDT</option>
+                                <option value="ETH-USDT">ETH-USDT</option>
+                                <option value="ADA-USDT">ADA-USDT</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="filter-section-title">交易所设置</div>
+                    <!-- 第二行：增强筛选 -->
+                    <div class="controls-row">
+                        <div class="control-group">
+                            <label for="exchangeA">Buy交易所</label>
+                            <select id="exchangeA">
+                                <option value="">请选择</option>
+                                <option value="binance">Binance</option>
+                                <option value="okx">OKX</option>
+                                <option value="bybit">Bybit</option>
+                            </select>
+                        </div>
+                        <div class="control-group">
+                            <label for="exchangeB">Sell交易所</label>
+                            <select id="exchangeB">
+                                <option value="">请选择</option>
+                                <option value="binance">Binance</option>
+                                <option value="okx">OKX</option>
+                                <option value="bybit">Bybit</option>
+                            </select>
+                        </div>
+                        <div class="control-group">
+                            <label for="fundingPeriod">资金费周期</label>
+                            <select id="fundingPeriod">
+                                <option value="">不限制</option>
+                                <option value="8h">8小时</option>
+                                <option value="4h">4小时</option>
+                            </select>
+                        </div>
+                        <div class="control-group">
+                            <label for="openSpreadThreshold">盘差 (%)</label>
+                            <input type="number" id="openSpreadThreshold" value="0.06" step="0.01" min="0">
+                        </div>
+                    </div>
+                    
+                    <div class="filter-section-title">操作控制</div>
+                    <!-- 第三行：操作按钮 -->
+                    <div class="controls-row">
+                        <button class="btn btn-primary" onclick="scanOpportunities()">
+                            <span class="spinner" id="scanSpinner" style="display: none;"></span>
+                            扫描机会
+                        </button>
+                        <button class="btn btn-success" id="autoTradingBtn" onclick="enableAutoTrading()">启动自动交易</button>
+                        <button class="btn btn-secondary" onclick="saveFilters()">保存筛选</button>
+                    </div>
+                </div>
+                
+                <div id="opportunitiesContent">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p>Loading opportunities...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Records Tab -->
+            <div id="order-records" class="tab-content">
+                <div class="section-header">
+                    <h2>Order Records Management</h2>
+                </div>
+                
+                <!-- Order Records Controls -->
+                <div class="controls-panel">
+                    <div class="controls-row">
+                        <div class="control-group">
+                            <label for="orderTimeRange">时间范围</label>
+                            <select id="orderTimeRange">
+                                <option value="today">今日</option>
+                                <option value="week" selected>最近7天</option>
+                                <option value="month">最近30天</option>
+                                <option value="custom">自定义</option>
+                            </select>
+                        </div>
+                        <div class="control-group">
+                            <label for="orderSymbolFilter">交易对</label>
+                            <select id="orderSymbolFilter">
+                                <option value="">全部交易对</option>
+                                <option value="BTC-USDT">BTC-USDT</option>
+                                <option value="ETH-USDT">ETH-USDT</option>
+                                <option value="ADA-USDT">ADA-USDT</option>
+                            </select>
+                        </div>
+                        <div class="control-group">
+                            <label for="orderStatusFilter">状态</label>
+                            <select id="orderStatusFilter">
+                                <option value="">全部状态</option>
+                                <option value="active">运行中</option>
+                                <option value="closed">已关闭</option>
+                                <option value="pending_close">待关闭</option>
+                            </select>
+                        </div>
+                        <div class="control-group">
+                            <label for="orderExchangeFilter">交易所</label>
+                            <select id="orderExchangeFilter">
+                                <option value="">全部交易所</option>
+                                <option value="binance">Binance</option>
+                                <option value="okx">OKX</option>
+                                <option value="bybit">Bybit</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="controls-row">
+                        <button class="btn btn-primary" onclick="refreshOrderRecords()">
+                            刷新订单
+                        </button>
+                        <button class="btn btn-secondary" onclick="exportOrderRecords()">
+                            导出数据
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="orderRecordsContent">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p>Loading order records...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rules Settings Tab -->
+            <div id="rules-settings" class="tab-content">
+                <div class="section-header">
+                    <h2>Rules Configuration</h2>
+                </div>
+                
+                <div class="controls-panel">
+                    <div class="controls-row">
+                        <button class="btn btn-primary" onclick="openRulesModal()">
+                            新建规则
+                        </button>
+                        <button class="btn btn-success" onclick="useTemplate()">
+                            使用模板
+                        </button>
+                        <button class="btn btn-secondary" onclick="exportRules()">
+                            导出规则
+                        </button>
+                        <button class="btn btn-secondary" onclick="importRules()">
+                            导入规则
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="rulesContent">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p>Loading rules configuration...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <!-- Position Opening Modal -->
+    <div id="positionModal" class="trade-modal">
+        <div class="modal-content" style="width: 600px; max-width: 95%;">
+            <div class="modal-header">
+                <h3>开仓套利位置</h3>
+                <span class="close" onclick="closePositionModal()">&times;</span>
+            </div>
+            <div id="positionModalBody">
+                <!-- Position details will be populated here by main.js -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Details Modal -->
+    <div id="detailsModal" class="trade-modal">
+        <div class="modal-content" style="width: 800px; max-width: 95%;">
+            <div class="modal-header">
+                <h3>套利详情</h3>
+                <span class="close" onclick="closeDetailsModal()">&times;</span>
+            </div>
+            <div id="detailsModalBody">
+                <!-- Details will be populated here by main.js -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Close Position Modal -->
+    <div id="closePositionModal" class="trade-modal">
+        <div class="modal-content" style="width: 500px; max-width: 95%;">
+            <div class="modal-header">
+                <h3>平仓交易</h3>
+                <span class="close" onclick="closeClosePositionModal()">&times;</span>
+            </div>
+            <div id="closePositionModalBody">
+                <!-- Close position form will be populated here by main.js -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Rules Editing Modal -->
+    <div id="rulesModal" class="trade-modal">
+        <div class="modal-content" style="width: 1200px; max-width: 95%;">
+            <div class="modal-header">
+                <h3>规则调整</h3>
+                <span class="close" onclick="closeRulesModal()">&times;</span>
+            </div>
+            <div id="rulesModalBody">
+                 <!-- Rules form will be loaded here, or defined statically -->
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Include all modals and scripts -->
+    <script src="../src/js/config.js"></script>
+    <script src="../src/js/api.js"></script>
+    <script src="../src/js/utils.js"></script>
+    <script src="../src/js/components.js"></script>
+    <script src="../src/js/main.js"></script>
+</body>
+</html>
